@@ -177,54 +177,57 @@ export class RoomScene extends Phaser.Scene {
   }
 
   private setupPanelDrag() {
-    const panel = document.getElementById('room-panel')!
+    const panel  = document.getElementById('room-panel')!
     const handle = document.getElementById('room-panel-handle')!
+    const grid   = panel.querySelector<HTMLElement>('#room-items')!
 
-    const panelH = panel.offsetHeight
-    // 스냅 위치: collapsed(기본), peek(조금 올림), expanded(많이 올림)
-    const SNAP = {
-      collapsed: 0,
-      peek:      Math.round(panelH * 0.35),
-      expanded:  Math.round(panelH * 0.62),
-    }
-    let currentSnap = 0  // translateY(-px)
+    // 패널 자연 높이 = 전체 펼친 상태 (탭 + 2행 + 버튼)
+    const fullH = panel.scrollHeight
 
-    const snapTo = (target: number, animate = true) => {
-      currentSnap = target
-      panel.style.transition = animate
-        ? 'transform 0.3s cubic-bezier(0.32,0.72,0,1)' : 'none'
-      panel.style.transform = `translateY(-${target}px)`
+    // 1행만 보이는 높이: 핸들 + 탭 + 첫 행 아이템
+    const firstRow = grid.querySelector<HTMLElement>('.room-item')
+    const rowH = firstRow ? firstRow.offsetHeight + 8 : 130  // 8 = gap
+    const handle$ = handle.offsetHeight
+    const tabs$   = panel.querySelector<HTMLElement>('#room-tabs')!.offsetHeight
+    const oneRowH = handle$ + tabs$ + rowH + 12  // 12 = 여유
+
+    const SNAPS = [oneRowH, fullH]
+    let currentH = oneRowH
+
+    panel.style.height = `${oneRowH}px`
+
+    const snapTo = (h: number, animate = true) => {
+      currentH = h
+      panel.style.transition = animate ? 'height 0.3s cubic-bezier(0.32,0.72,0,1)' : 'none'
+      panel.style.height = `${h}px`
     }
 
     let startY = 0
-    let startSnap = 0
+    let startH = 0
 
     const onStart = (y: number) => {
       startY = y
-      startSnap = currentSnap
+      startH = currentH
       panel.style.transition = 'none'
     }
 
     const onMove = (y: number) => {
-      const dy = startY - y   // 위로 드래그 = 양수
-      const next = Math.max(0, Math.min(SNAP.expanded, startSnap + dy))
-      panel.style.transform = `translateY(-${next}px)`
+      const dy = startY - y  // 위로 드래그 = 양수 = 높이 증가
+      const next = Math.max(oneRowH, Math.min(fullH, startH + dy))
+      panel.style.height = `${next}px`
     }
 
     const onEnd = (y: number) => {
       const dy = startY - y
-      const pos = startSnap + dy
-      const snaps = [SNAP.collapsed, SNAP.peek, SNAP.expanded]
-      const target = snaps.reduce((a, b) => Math.abs(b - pos) < Math.abs(a - pos) ? b : a)
+      const pos = startH + dy
+      const target = SNAPS.reduce((a, b) => Math.abs(b - pos) < Math.abs(a - pos) ? b : a)
       snapTo(target)
     }
 
-    // Touch
     handle.addEventListener('touchstart', e => { onStart(e.touches[0].clientY) }, { passive: true })
     handle.addEventListener('touchmove',  e => { onMove(e.touches[0].clientY) },  { passive: true })
     handle.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientY) })
 
-    // Mouse (PC 테스트용)
     handle.addEventListener('mousedown', e => {
       onStart(e.clientY)
       const move = (ev: MouseEvent) => onMove(ev.clientY)
