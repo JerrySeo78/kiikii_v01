@@ -1,13 +1,1439 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>kiikii_v01</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>KiiiKiii</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #1a0a14;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #app {
+      width: 100%; max-width: 390px; height: 100dvh;
+      margin: 0 auto;
+      position: relative; overflow: hidden;
+    }
+
+    #game-container {
+      position: absolute; inset: 0;
+    }
+    #game-container canvas {
+      display: block !important;
+      width: 100% !important; height: 100% !important;
+    }
+
+    /* ── 타이틀 화면 ── */
+    #boot-screen {
+      display: none;
+      position: absolute; inset: 0;
+      z-index: 10;
+    }
+    #boot-screen.visible { display: block; }
+
+    #boot-bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    #boot-btn-wrap {
+      position: absolute;
+      bottom: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 62%;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      animation: btnFloat 2.4s ease-in-out infinite;
+    }
+    #boot-btn-wrap:active {
+      transform: translateX(-50%) scale(0.95);
+      animation: none;
+    }
+    #boot-btn-wrap:active #boot-btn {
+      filter: brightness(0.9);
+    }
+
+    #boot-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 0;
+      border-radius: 50px;
+      background: linear-gradient(180deg, #fff8fa 0%, #ffe8f0 100%);
+      border: 2.5px solid #f4a0c0;
+      box-shadow: 0 4px 18px rgba(220, 80, 130, 0.35), inset 0 1px 0 rgba(255,255,255,0.9);
+      transition: filter 0.12s;
+    }
+
+    #boot-btn .sparkle {
+      color: #e0508a;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    #boot-btn .label {
+      color: #d63f80;
+      font-size: clamp(17px, 4.5vw, 20px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    }
+
+    @keyframes btnFloat {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(-8px); }
+    }
+
+    /* ── 동영상 화면 ── */
+    #video-screen {
+      display: none;
+      position: absolute; inset: 0;
+      z-index: 10;
+      background: #000;
+    }
+    #video-screen.visible { display: block; }
+
+    #video-skip-btn {
+      position: absolute;
+      top: 20px;
+      right: 16px;
+      padding: 7px 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      font-size: 14px;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
+    }
+    #video-skip-btn:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ── 멤버 선택 화면 ── */
+    #select-member-screen {
+      display: none;
+      position: absolute; inset: 0;
+      z-index: 10;
+    }
+    #select-member-screen.visible { display: block; }
+
+    #select-member-bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    #member-zones {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      overflow: visible;
+    }
+
+    .member-zone {
+      fill: transparent;
+      stroke: transparent;
+      stroke-width: 12;
+      cursor: pointer;
+      transition: stroke 0.2s, filter 0.2s;
+    }
+
+    .member-zone[data-member="수이"].selected  { stroke: #f472b6; filter: drop-shadow(0 0 8px #f472b6aa); }
+    .member-zone[data-member="키아"].selected  { stroke: #a78bfa; filter: drop-shadow(0 0 8px #a78bfaaa); }
+    .member-zone[data-member="지유"].selected  { stroke: #d4a853; filter: drop-shadow(0 0 8px #d4a853aa); }
+    .member-zone[data-member="하음"].selected  { stroke: #fb923c; filter: drop-shadow(0 0 8px #fb923caa); }
+    .member-zone[data-member="이슬"].selected  { stroke: #c084fc; filter: drop-shadow(0 0 8px #c084fcaa); }
+
+    #select-member-btn-wrap {
+      position: absolute;
+      bottom: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 62%;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      animation: btnFloat 2.4s ease-in-out infinite;
+    }
+    #select-member-btn-wrap:active {
+      transform: translateX(-50%) scale(0.95);
+      animation: none;
+    }
+    #select-member-btn-wrap:active #select-member-btn {
+      filter: brightness(0.9);
+    }
+
+    #select-member-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 0;
+      border-radius: 50px;
+      background: linear-gradient(180deg, #fff8fa 0%, #ffe8f0 100%);
+      border: 2.5px solid #f4a0c0;
+      box-shadow: 0 4px 18px rgba(220, 80, 130, 0.35), inset 0 1px 0 rgba(255,255,255,0.9);
+      transition: filter 0.12s;
+    }
+
+    #select-member-btn .sparkle {
+      color: #e0508a;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    #select-member-btn .label {
+      color: #d63f80;
+      font-size: clamp(17px, 4.5vw, 20px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    }
+
+    /* ── 멤버 룸 화면 ── */
+    #room-screen {
+      display: none;
+      position: absolute; inset: 0;
+      z-index: 10;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    }
+    #room-screen.visible { display: block; }
+
+    #room-bg {
+      position: absolute;
+      top: -22%; left: 0; right: 0;
+      width: 100%; height: 122%;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    /* 캐릭터 */
+    #room-character {
+      position: absolute;
+      width: 43vw; height: 43vw;
+      max-width: 141px; max-height: 141px;
+      background-repeat: no-repeat;
+      background-size: auto 100%;
+      background-position-x: 0%;
+      z-index: 15;
+      transition: left 0.6s linear, bottom 0.6s linear;
+    }
+
+    @keyframes room-walk {
+      from { background-position-x: 0%; }
+      to   { background-position-x: 150%; }
+    }
+
+    /* 말풍선 */
+    #room-bubble {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.93);
+      border-radius: 16px;
+      border: 1.5px solid rgba(255,190,220,0.6);
+      padding: 8px 14px;
+      font-size: 11px;
+      color: #555;
+      white-space: nowrap;
+      z-index: 16;
+      box-shadow: 0 2px 8px rgba(200,80,140,0.15);
+    }
+    #room-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px; left: 20px;
+      border: 8px solid transparent;
+      border-top-color: rgba(255,255,255,0.93);
+      border-bottom: none;
+    }
+
+    /* 상단 헤더 — 풀바 없이 떠있는 요소들 */
+    #room-header {
+      position: absolute;
+      top: 12px; left: 12px; right: 12px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    #room-back-btn, #room-help-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,190,220,0.7);
+      background: rgba(255,248,232,0.92);
+      font-size: 20px;
+      font-weight: 900;
+      color: #d63f80;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(200,80,140,0.2);
+      pointer-events: auto;
+      line-height: 1;
+    }
+
+    #room-title {
+      background: linear-gradient(135deg, #ff6fb0, #ff4495);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      padding: 8px 18px;
+      border-radius: 24px;
+      box-shadow: 0 3px 12px rgba(220,40,100,0.35);
+      text-shadow: 0 1px 3px rgba(180,0,60,0.3);
+    }
+
+    /* 좌측 멤버 카드 */
+    #room-member-card {
+      position: absolute;
+      top: 68px; left: 8px;
+      width: 118px;
+      background: rgba(255,248,232,0.93);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      border: 1.5px solid rgba(230,200,160,0.6);
+      box-shadow: 2px 2px 12px rgba(200,80,140,0.15);
+      padding: 10px 10px 8px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .room-card-label {
+      font-size: 9px;
+      color: #ff4495;
+      font-weight: 700;
+      background: rgba(255,180,220,0.25);
+      border-radius: 8px;
+      padding: 2px 6px;
+      align-self: flex-start;
+    }
+
+    .room-member-name {
+      font-size: 22px;
+      font-weight: 900;
+      color: #222;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .room-lv-label {
+      font-size: 10px;
+      color: #999;
+      font-weight: 500;
+    }
+
+    .room-intimacy-bar {
+      width: 100%;
+      height: 6px;
+      background: #f0d0e0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .room-intimacy-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6fb0, #ff4495);
+      border-radius: 3px;
+    }
+
+    .room-card-score {
+      font-size: 9px;
+      color: #aaa;
+      text-align: right;
+    }
+
+    /* 친밀도 보상 — 카드 아래 별도 버튼 */
+    #room-reward-btn {
+      position: absolute;
+      top: calc(68px + 130px + 8px);
+      left: 8px;
+      width: 118px;
+      padding: 8px 0;
+      background: linear-gradient(90deg, #ff6fb0, #ff4495);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 3px 10px rgba(220,40,100,0.3);
+      z-index: 20;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    }
+
+    /* 우측 액션 버튼 */
+    #room-actions {
+      position: absolute;
+      top: 68px; right: 8px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .room-action-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,248,232,0.93);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(230,200,160,0.6);
+      border-radius: 14px;
+      padding: 6px 10px 6px 6px;
+      cursor: pointer;
+      box-shadow: 1px 2px 8px rgba(200,80,140,0.12);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .room-action-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      flex-shrink: 0;
+    }
+
+    .room-action-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    /* 하단 패널 */
+    #room-panel {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 20;
+      background: rgba(255,248,232,0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1.5px solid rgba(230,200,160,0.5);
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #room-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(230,200,160,0.3);
+      padding: 0 4px;
+    }
+
+    .room-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 2px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #b08080;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+    }
+
+    .room-tab.active {
+      color: #d63f80;
+      border-bottom-color: #ff4495;
+      font-weight: 800;
+    }
+
+    #room-items {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .room-item {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      background: rgba(255,220,235,0.5);
+      border: 1.5px solid rgba(255,190,220,0.4);
+    }
+
+    .room-item.selected {
+      border-color: #ff4495;
+      background: rgba(255,180,220,0.3);
+      box-shadow: 0 0 0 2px rgba(255,68,149,0.3);
+    }
+
+    #room-bottom-btns {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px 16px;
+    }
+
+    .room-bottom-btn {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: 22px;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    }
+
+    .room-bottom-btn.save, .room-bottom-btn.preview {
+      background: rgba(255,240,248,0.9);
+      color: #c06090;
+      border: 1.5px solid rgba(255,190,220,0.5);
+    }
+
+    .room-bottom-btn.apply {
+      background: linear-gradient(90deg,#ff6fb0,#ff4495);
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(220,40,100,0.35);
+    }
+
+    /* ── 홈 화면 ── */
+    #home-screen {
+      display: none;
+      position: absolute; inset: 0;
+      z-index: 10;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    }
+    #home-screen.visible { display: block; }
+
+    #home-bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    /* ── 홈 헤더 ── */
+    #home-header {
+      position: absolute;
+      top: 6px;
+      left: 8px; right: 8px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    /* 1행: 아바타 + 레벨 + 우측 아이콘 */
+    .hdr-row1 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hdr-avatar-wrap {
+      position: relative;
+      width: 108px; height: 108px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .hdr-avatar-frame {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      z-index: 2;
+    }
+    .hdr-avatar-img {
+      position: absolute;
+      inset: 10%;
+      width: 80%; height: 80%;
+      border-radius: 50%;
+      z-index: 1;
+      overflow: hidden;
+      background-color: #f5e0ec;
+      background-repeat: no-repeat;
+      background-size: auto 145%;
+      background-position: top center;
+    }
+
+    .hdr-level {
+      background: rgba(255, 240, 248, 0.82);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #d63f80;
+      white-space: nowrap;
+    }
+
+    .hdr-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 240, 248, 0.82);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 20px;
+      padding: 5px 8px;
+    }
+    .hdr-actions button {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hdr-actions button img {
+      width: 26px; height: 26px;
+      object-fit: contain;
+    }
+
+    /* 2행: 스탯 바 */
+    .hdr-row2 {
+      background: rgba(255, 240, 248, 0.82);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 20px;
+      padding: 6px 10px 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hdr-nickname {
+      font-size: 12px;
+      font-weight: 700;
+      color: #5a3050;
+      white-space: nowrap;
+      margin-right: 2px;
+    }
+    .hdr-flower { font-size: 11px; margin-right: 4px; }
+
+    .hdr-stat {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex: 1;
+      min-width: 0;
+    }
+    .hdr-stat img {
+      width: 20px; height: 20px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .hdr-stat-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .hdr-stat-val {
+      font-size: 10px;
+      font-weight: 700;
+      color: #5a3050;
+      white-space: nowrap;
+    }
+    .hdr-stat-bar {
+      height: 3px;
+      background: #f0d0e0;
+      border-radius: 2px;
+      margin-top: 1px;
+      width: 100%;
+      min-width: 28px;
+    }
+    .hdr-stat-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #ff6b9d, #ffb3d1);
+    }
+    .hdr-stat-label {
+      font-size: 8px;
+      color: #e05090;
+      font-weight: 600;
+    }
+
+    .hdr-plus {
+      background: rgba(255,180,210,0.4);
+      border: 1px solid rgba(255,150,190,0.5);
+      border-radius: 50%;
+      width: 16px; height: 16px;
+      font-size: 11px;
+      color: #d63f80;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hdr-divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(200,150,180,0.3);
+      flex-shrink: 0;
+    }
+
+    /* ── 하단 탭바 ── */
+    #home-tabbar {
+      position: absolute;
+      bottom: 10px;
+      left: 10px; right: 10px;
+      z-index: 20;
+      display: flex;
+      align-items: stretch;
+      background: rgba(255, 248, 232, 0.95);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      border: 1.5px solid rgba(230, 200, 160, 0.6);
+      box-shadow: 0 4px 20px rgba(220,80,140,0.18);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0 6px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      gap: 3px;
+    }
+
+    .tab-item img {
+      width: auto;
+      height: auto;
+      max-width: 36px;
+      max-height: 36px;
+      object-fit: contain;
+    }
+
+    .tab-item span {
+      font-size: 12px;
+      font-weight: 600;
+      color: #c06090;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    .tab-item.active img  { filter: drop-shadow(0 0 4px rgba(220,80,140,0.6)); }
+    .tab-item.active span { color: #d63f80; }
+
+    /* ── 홈 캐릭터 스프라이트 ── */
+    #home-character {
+      position: absolute;
+      bottom: 38%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 68vw;
+      height: 68vw;
+      max-width: 289px;
+      max-height: 289px;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: center bottom;
+      z-index: 15;
+    }
+
+    @keyframes sprite-idle {
+      from { background-position-x: 0%; }
+      to   { background-position-x: 150%; }  /* 3프레임: 0→50→100% */
+    }
+
+    /* ── 탭 클릭 애니메이션 ── */
+    @keyframes tapPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+    .tap-pop {
+      animation: tapPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* ── 친밀도 카드 ── */
+    #home-intimacy-card {
+      position: absolute;
+      top: 19%;
+      left: 6px;
+      width: 158px;
+      background: rgba(255, 248, 232, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      border: 1.5px solid rgba(230, 200, 160, 0.6);
+      box-shadow: 3px 3px 14px rgba(200, 80, 140, 0.18);
+      padding: 12px 12px 12px;
+      transform: rotate(-3deg);
+      transform-origin: top left;
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .intimacy-heart {
+      position: absolute;
+      top: -10px;
+      right: 12px;
+      font-size: 22px;
+      color: #ff4495;
+      filter: drop-shadow(0 1px 3px rgba(220,80,140,0.5));
+    }
+
+    .intimacy-top-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .intimacy-member-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff6fb0, #ff4495);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(220,60,130,0.35);
+      flex-shrink: 0;
+    }
+
+    .intimacy-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .intimacy-level {
+      font-size: 10px;
+      color: #c06090;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .intimacy-score {
+      font-size: 19px;
+      font-weight: 800;
+      color: #222;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .intimacy-score-sub {
+      font-size: 11px;
+      font-weight: 500;
+      color: #bbb;
+    }
+
+    .intimacy-bar {
+      width: 100%;
+      height: 7px;
+      background: #f0d0e0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .intimacy-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6fb0, #ff4495);
+      border-radius: 4px;
+    }
+
+    .intimacy-room-btn {
+      width: 100%;
+      padding: 7px 0;
+      background: linear-gradient(90deg, #ff6fb0, #ff4495);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      box-shadow: 0 2px 6px rgba(220,60,130,0.3);
+      letter-spacing: -0.01em;
+    }
+
+    /* ── 오늘의 플랜 카드 ── */
+    #home-plan-card {
+      position: absolute;
+      top: 38%;
+      right: 5px;
+      width: 115px;
+      background: rgba(255, 248, 232, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      border: 1.5px solid rgba(230, 200, 160, 0.6);
+      box-shadow: -3px 3px 14px rgba(200, 80, 140, 0.18);
+      padding: 12px;
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .plan-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #222;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+
+    .plan-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 9px;
+      color: #444;
+      line-height: 1.3;
+    }
+
+    .plan-check {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1.5px solid #ffaad0;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      margin-top: 1px;
+    }
+
+    .plan-check.done {
+      background: #ff4495;
+      border-color: #ff4495;
+      color: #fff;
+    }
+
+    .plan-divider {
+      height: 1px;
+      background: rgba(255,180,220,0.4);
+      margin: 2px 0;
+    }
+
+    .plan-reward {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9px;
+      color: #c06090;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ── 하단 액션 바 ── */
+    #home-action-bar {
+      position: absolute;
+      bottom: 88px;
+      left: 0; right: 0;
+      z-index: 22;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 8px;
+    }
+
+    .action-side-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      width: 58px;
+      height: 58px;
+      background: rgba(255, 248, 232, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      border: 1.5px solid rgba(230, 200, 160, 0.6);
+      box-shadow: 0 2px 10px rgba(200, 80, 140, 0.15);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+
+    .action-side-btn .icon { font-size: 22px; line-height: 1; }
+    .action-side-btn .label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #c06090;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    }
+
+    #home-play-btn {
+      flex: 1;
+      height: 58px;
+      background: linear-gradient(90deg, #ff6fb0 0%, #ff2277 50%, #ff6fb0 100%);
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 4px 20px rgba(220, 40, 100, 0.45),
+                  inset 0 1px 0 rgba(255,255,255,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #home-play-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 60%);
+      border-radius: inherit;
+    }
+
+    #home-play-btn .sparkle {
+      color: rgba(255,255,255,0.85);
+      font-size: 13px;
+    }
+
+    #home-play-btn .text {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      text-shadow: 0 1px 3px rgba(180,0,60,0.3);
+    }
+
+    #home-play-btn .plane { font-size: 18px; }
+
+    /* ── 멤버 선택 버튼 ── */
+    #home-member-select-btn {
+      position: absolute;
+      top: calc(19% + 143px);
+      left: 5px;
+      z-index: 26;
+      padding: 8px 20px;
+      border-radius: 24px;
+      background: linear-gradient(90deg, #ff6fb0, #ff4495);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(220,60,130,0.35);
+      letter-spacing: -0.01em;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── 멤버 리스트 ── */
+    #home-member-list {
+      position: absolute;
+      top: calc(19% + 185px);
+      left: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 25;
+      overflow: hidden;
+      max-height: 0;
+      pointer-events: none;
+    }
+
+    #home-member-list.open {
+      max-height: 400px;
+      pointer-events: auto;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #home-member-list.closing {
+      max-height: 0;
+      pointer-events: none;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .member-list-item {
+      width: 118px;
+      backdrop-filter: blur(8px);
+      border-radius: 14px;
+      border: 1.5px solid rgba(255, 190, 220, 0.5);
+      box-shadow: 2px 2px 10px rgba(200, 80, 140, 0.12);
+      padding: 7px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      opacity: 0;
+      transform: translateY(-12px);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+
+    #home-member-list.open .member-list-item { opacity: 1; transform: translateY(0); }
+    #home-member-list.open .member-list-item:nth-child(1) { transition-delay: 0.05s; }
+    #home-member-list.open .member-list-item:nth-child(2) { transition-delay: 0.10s; }
+    #home-member-list.open .member-list-item:nth-child(3) { transition-delay: 0.15s; }
+    #home-member-list.open .member-list-item:nth-child(4) { transition-delay: 0.20s; }
+
+    #home-member-list.closing .member-list-item { opacity: 0; transform: translateY(-12px); }
+    #home-member-list.closing .member-list-item:nth-child(1) { transition-delay: 0.15s; }
+    #home-member-list.closing .member-list-item:nth-child(2) { transition-delay: 0.10s; }
+    #home-member-list.closing .member-list-item:nth-child(3) { transition-delay: 0.05s; }
+    #home-member-list.closing .member-list-item:nth-child(4) { transition-delay: 0.00s; }
+
+    .member-list-item:active { filter: brightness(0.95); }
+
+    .member-list-thumb {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background-size: cover;
+      background-position: top center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .member-list-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .member-list-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #222;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .member-list-trait {
+      font-size: 10px;
+      color: #a06080;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+    }
+
+    .member-list-arrow {
+      font-size: 26px;
+      font-weight: 900;
+      color: #c080a8;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="game-container"></div>
+
+  <div id="boot-screen">
+    <img id="boot-bg" src="assets/bg/title_bg.png" alt="">
+    <div id="boot-btn-wrap">
+      <div id="boot-btn">
+        <span class="sparkle">✦</span>
+        <span class="label">시작하기</span>
+        <span class="sparkle">✦</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="video-screen">
+    <video id="video-player"
+      src="https://kr.object.ncloudstorage.com/kiiikiiihub-mockup/video/intro.mp4"
+      playsinline autoplay muted
+      style="width:100%;height:100%;object-fit:cover;display:block;"
+    ></video>
+    <button id="video-skip-btn">Skip</button>
+  </div>
+
+  <div id="select-member-screen">
+    <img id="select-member-bg" src="assets/screens/3_select_member_bg.png" alt="">
+
+    <!-- SVG 좌표계 = 원본 이미지(941×1672) → object-fit:cover와 자동 일치 -->
+    <svg id="member-zones" viewBox="0 0 941 1672" preserveAspectRatio="xMidYMin slice"
+         xmlns="http://www.w3.org/2000/svg">
+
+      <!-- 수이 -->
+      <path class="member-zone" data-member="수이"
+        d="M284,431 Q209,431 209,506 L209,654 L396,654 L396,506 Q396,431 321,431 Z"/>
+
+      <!-- 키아 -->
+      <path class="member-zone" data-member="키아"
+        d="M653,437 Q577,437 577,513 L577,655 L766,655 L766,513 Q766,437 690,437 Z"/>
+
+      <!-- 지유 -->
+      <path class="member-zone" data-member="지유"
+        d="M465,866 Q401,866 401,930 L401,1042 L560,1042 L560,930 Q560,866 496,866 Z"/>
+
+      <!-- 하음 -->
+      <path class="member-zone" data-member="하음"
+        d="M222,1167 Q154,1167 154,1235 L154,1366 L324,1366 L324,1235 Q324,1167 256,1167 Z"/>
+
+      <!-- 이슬 -->
+      <path class="member-zone" data-member="이슬"
+        d="M701,1166 Q634,1166 634,1233 L634,1372 L801,1372 L801,1233 Q801,1166 734,1166 Z"/>
+    </svg>
+
+    <div id="select-member-btn-wrap">
+      <div id="select-member-btn">
+        <span class="sparkle">✦</span>
+        <span class="label">멤버 선택</span>
+        <span class="sparkle">✦</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="home-screen">
+    <img id="home-bg" src="assets/screens/4_home_bg.png" alt="">
+
+    <!-- 하단 액션 바 -->
+    <div id="home-action-bar">
+      <button class="action-side-btn">
+        <span class="icon">📅</span>
+        <span class="label">이벤트</span>
+      </button>
+      <button id="home-play-btn">
+        <span class="sparkle">✦</span>
+        <span class="text">오늘의 게임 플레이</span>
+        <span class="plane">✈️</span>
+        <span class="sparkle">✦</span>
+      </button>
+      <button class="action-side-btn">
+        <span class="icon">🎁</span>
+        <span class="label">패스</span>
+      </button>
+    </div>
+
+    <nav id="home-tabbar">
+      <div class="tab-item active" data-tab="home">
+        <img src="assets/ui/tab_home.png" alt="홈"><span>홈</span>
+      </div>
+      <div class="tab-item" data-tab="play">
+        <img src="assets/ui/tab_play.png" alt="플레이"><span>플레이</span>
+      </div>
+      <div class="tab-item" data-tab="box">
+        <img src="assets/ui/tab_box.png" alt="박스"><span>박스</span>
+      </div>
+      <div class="tab-item" data-tab="shop">
+        <img src="assets/ui/tab_shop.png" alt="상점"><span>상점</span>
+      </div>
+      <div class="tab-item" data-tab="talk">
+        <img src="assets/ui/tab_talk.png" alt="토크"><span>토크</span>
+      </div>
+      <div class="tab-item" data-tab="menu">
+        <img src="assets/ui/tab_menu.png" alt="메뉴"><span>메뉴</span>
+      </div>
+    </nav>
+
+    <div id="home-character"></div>
+
+    <!-- 멤버 선택 버튼 -->
+    <button id="home-member-select-btn">멤버 선택</button>
+
+    <!-- 멤버 리스트 -->
+    <div id="home-member-list"></div>
+
+    <!-- 오늘의 플랜 카드 -->
+    <div id="home-plan-card">
+      <div class="plan-title">오늘의 플랜 🌴</div>
+      <div class="plan-item">
+        <div class="plan-check done">✓</div>
+        <span>데일리 로그인</span>
+      </div>
+      <div class="plan-item">
+        <div class="plan-check done">✓</div>
+        <span>에너지 사용하기<br>(120/120)</span>
+      </div>
+      <div class="plan-item">
+        <div class="plan-check done">✓</div>
+        <span>미니게임 1회 플레이<br>(1/1)</span>
+      </div>
+      <div class="plan-item">
+        <div class="plan-check"></div>
+        <span>사진 찍기 1회<br>(0/1)</span>
+      </div>
+      <div class="plan-item">
+        <div class="plan-check"></div>
+        <span>멤버와 인사하기<br>(0/1)</span>
+      </div>
+      <div class="plan-divider"></div>
+      <div class="plan-reward">플랜 완료 보상 💎<strong>50</strong></div>
+    </div>
+
+    <!-- 친밀도 카드 -->
+    <div id="home-intimacy-card">
+      <div class="intimacy-heart">♥</div>
+      <div class="intimacy-top-row">
+        <div id="intimacy-member-name" class="intimacy-member-circle">수이</div>
+        <div class="intimacy-text">
+          <div class="intimacy-level">친밀도 Lv. 6</div>
+          <div class="intimacy-score">720<span class="intimacy-score-sub">/1,000</span></div>
+        </div>
+      </div>
+      <div class="intimacy-bar">
+        <div class="intimacy-bar-fill" style="width:72%"></div>
+      </div>
+      <button class="intimacy-room-btn">🚪 룸 이동 →</button>
+    </div>
+
+    <div id="home-header">
+      <!-- 1행: 아바타 + 레벨 + 아이콘 -->
+      <div class="hdr-row1">
+        <div class="hdr-avatar-wrap">
+          <div id="home-avatar-img" class="hdr-avatar-img"></div>
+          <img class="hdr-avatar-frame" src="assets/ui/avatar_frame.png" alt="">
+        </div>
+        <div class="hdr-level">Lv. 42</div>
+        <div class="hdr-actions">
+          <button><img src="assets/ui/icon_mail.png" alt="메일"></button>
+          <button><img src="assets/ui/icon_bell.png" alt="알림"></button>
+          <button><img src="assets/ui/icon_settings.png" alt="설정"></button>
+        </div>
+      </div>
+
+      <!-- 2행: 닉네임 + 스탯 -->
+      <div class="hdr-row2">
+        <span class="hdr-nickname">Nickname</span>
+        <span class="hdr-flower">🌸</span>
+
+        <div class="hdr-stat">
+          <img src="assets/ui/icon_heart.png" alt="">
+          <div class="hdr-stat-info">
+            <span class="hdr-stat-val">120/120</span>
+            <div class="hdr-stat-bar"><div class="hdr-stat-bar-fill" style="width:100%"></div></div>
+            <span class="hdr-stat-label">MAX</span>
+          </div>
+          <button class="hdr-plus">+</button>
+        </div>
+
+        <div class="hdr-divider"></div>
+
+        <div class="hdr-stat">
+          <img src="assets/ui/icon_coin.png" alt="">
+          <div class="hdr-stat-info">
+            <span class="hdr-stat-val">38,760</span>
+            <div class="hdr-stat-bar"><div class="hdr-stat-bar-fill" style="width:72%; background: linear-gradient(90deg,#f5c542,#ffe88a);"></div></div>
+          </div>
+          <button class="hdr-plus">+</button>
+        </div>
+
+        <div class="hdr-divider"></div>
+
+        <div class="hdr-stat">
+          <img src="assets/ui/icon_diamond.png" alt="">
+          <div class="hdr-stat-info">
+            <span class="hdr-stat-val">1,250</span>
+            <div class="hdr-stat-bar"><div class="hdr-stat-bar-fill" style="width:45%; background: linear-gradient(90deg,#a78bfa,#d8b4fe);"></div></div>
+          </div>
+          <button class="hdr-plus">+</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── 멤버 룸 화면 ── -->
+  <div id="room-screen">
+    <img id="room-bg" src="assets/screens/5_room_bg.png" alt="">
+
+    <!-- 캐릭터 -->
+    <div id="room-character"></div>
+
+    <!-- 말풍선 -->
+    <div id="room-bubble">오늘은 어떤 스타일로 꾸밀까요? 🎀</div>
+
+    <!-- 상단 헤더 (떠있는 형태) -->
+    <div id="room-header">
+      <button id="room-back-btn">‹</button>
+      <div id="room-title">멤버 하우스 / 꾸미기</div>
+      <button id="room-help-btn">?</button>
+    </div>
+
+    <!-- 좌측 멤버 카드 -->
+    <div id="room-member-card">
+      <div class="room-card-label">추천 멤버</div>
+      <div id="room-member-name" class="room-member-name">수이</div>
+      <div class="room-lv-label">친밀도 Lv. 6</div>
+      <div class="room-intimacy-bar">
+        <div class="room-intimacy-fill" style="width:72%"></div>
+      </div>
+      <div class="room-card-score">720 / 1,000</div>
+    </div>
+
+    <!-- 친밀도 보상 버튼 (별도) -->
+    <button id="room-reward-btn">🎁 친밀도 보상</button>
+
+    <!-- 우측 액션 버튼들 (이미지 + 텍스트) -->
+    <div id="room-actions">
+      <div class="room-action-item">
+        <div class="room-action-icon" style="background-image:url('assets/ui/room_voice.png')"></div>
+        <span class="room-action-label">오늘의 보이스</span>
+      </div>
+      <div class="room-action-item">
+        <div class="room-action-icon" style="background-image:url('assets/ui/room_letter.png')"></div>
+        <span class="room-action-label">편지</span>
+      </div>
+      <div class="room-action-item">
+        <div class="room-action-icon" style="background-image:url('assets/ui/room_ar.png')"></div>
+        <span class="room-action-label">AR포즈</span>
+      </div>
+    </div>
+
+    <!-- 하단 패널 -->
+    <div id="room-panel">
+      <div id="room-tabs">
+        <div class="room-tab active" data-tab="deco">🏠 꾸미기</div>
+        <div class="room-tab" data-tab="outfit">👗 의상</div>
+        <div class="room-tab" data-tab="furniture">🛋 가구</div>
+        <div class="room-tab" data-tab="gift">🎁 선물</div>
+        <div class="room-tab" data-tab="talk">💬 대화</div>
+      </div>
+      <div id="room-items">
+        <div class="room-item selected"></div>
+        <div class="room-item"></div>
+        <div class="room-item"></div>
+        <div class="room-item"></div>
+        <div class="room-item"></div>
+        <div class="room-item"></div>
+        <div class="room-item"></div>
+        <div class="room-item"></div>
+      </div>
+      <div id="room-bottom-btns">
+        <button class="room-bottom-btn save">💾 저장</button>
+        <button class="room-bottom-btn preview">👁 미리보기</button>
+        <button class="room-bottom-btn apply">✅ 꾸미기 적용</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
 </html>

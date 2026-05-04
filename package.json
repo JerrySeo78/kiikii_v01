@@ -6,9 +6,19 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gen:title": "node scripts/generate-title-layers.mjs",
+    "gen:select-member": "node scripts/generate-select-member-layers.mjs",
+    "detect:doors": "node scripts/detect-door-bounds.mjs",
+    "gen:home-bg": "node scripts/generate-home-bg.mjs",
+    "gen:home-icons": "node scripts/generate-home-ui-icons.mjs",
+    "gen:tabbar": "node scripts/generate-tabbar.mjs",
+    "process:sprites": "node scripts/remove-sprite-bg.mjs"
   },
   "devDependencies": {
+    "@google/genai": "^1.51.0",
+    "gh-pages": "^6.3.0",
+    "sharp": "^0.34.5",
     "typescript": "~6.0.2",
     "vite": "^8.0.10"
   },

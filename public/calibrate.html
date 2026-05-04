@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Door Calibration</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; display: flex; gap: 16px; padding: 16px; font-family: monospace; }
+
+  #canvas-wrap {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  #bg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+  #svg-overlay {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+  }
+
+  .zone {
+    fill: rgba(255,255,255,0.08);
+    stroke-width: 3;
+    cursor: move;
+  }
+  .zone:hover { fill: rgba(255,255,255,0.18); }
+  .zone.active { fill: rgba(255,255,255,0.25); }
+
+  .zone[data-m="수이"]  { stroke: #f472b6; }
+  .zone[data-m="키아"]  { stroke: #a78bfa; }
+  .zone[data-m="지유"]  { stroke: #d4a853; }
+  .zone[data-m="하음"]  { stroke: #fb923c; }
+  .zone[data-m="이슬"]  { stroke: #c084fc; }
+
+  .handle {
+    fill: #fff;
+    stroke: #333;
+    stroke-width: 1;
+    cursor: se-resize;
+  }
+
+  #panel {
+    color: #eee;
+    width: 340px;
+  }
+  h2 { margin-bottom: 12px; font-size: 14px; color: #aaa; }
+  .info { font-size: 12px; line-height: 1.8; color: #ccc; margin-bottom: 16px; }
+  .zone-info { margin-bottom: 8px; font-size: 11px; }
+  .zone-info span { display: inline-block; width: 28px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+
+  textarea {
+    width: 100%;
+    height: 420px;
+    background: #1e1e1e;
+    color: #9cdcfe;
+    border: 1px solid #444;
+    padding: 8px;
+    font-size: 11px;
+    resize: none;
+  }
+  button {
+    margin-top: 8px;
+    padding: 8px 16px;
+    background: #0e639c;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    width: 100%;
+  }
+  button:hover { background: #1177bb; }
+</style>
+</head>
+<body>
+
+<div id="canvas-wrap">
+  <img id="bg" src="assets/screens/3_select_member_bg.png">
+  <svg id="svg-overlay" viewBox="0 0 941 1672" preserveAspectRatio="xMidYMin slice">
+    <!-- zones: x,y = top-left corner in image coords; w,h = size -->
+    <rect class="zone" data-m="수이" x="55"  y="350" width="390" height="650"/>
+    <rect class="zone" data-m="키아" x="495" y="280" width="395" height="670"/>
+    <rect class="zone" data-m="지유" x="190" y="570" width="560" height="590"/>
+    <rect class="zone" data-m="하음" x="30"  y="940" width="425" height="605"/>
+    <rect class="zone" data-m="이슬" x="480" y="910" width="440" height="610"/>
+
+    <!-- resize handles (bottom-right corner) -->
+    <rect class="handle" data-m="수이" width="14" height="14" rx="2"/>
+    <rect class="handle" data-m="키아" width="14" height="14" rx="2"/>
+    <rect class="handle" data-m="지유" width="14" height="14" rx="2"/>
+    <rect class="handle" data-m="하음" width="14" height="14" rx="2"/>
+    <rect class="handle" data-m="이슬" width="14" height="14" rx="2"/>
+  </svg>
+</div>
+
+<div id="panel">
+  <h2>🚪 Door Calibration Tool</h2>
+  <div class="info">
+    • 박스를 드래그해서 문에 맞추세요<br>
+    • 모서리 흰 점으로 리사이즈<br>
+    • 맞추고 나서 [SVG 복사] 클릭
+  </div>
+  <div id="zone-list"></div>
+  <textarea id="output" readonly></textarea>
+  <button onclick="copyOutput()">📋 SVG paths 복사</button>
+</div>
+
+<script>
+const SVG_NS = 'http://www.w3.org/2000/svg'
+const IW = 941, IH = 1672
+const MEMBERS = ['수이','키아','지유','하음','이슬']
+const COLORS = { '수이':'#f472b6','키아':'#a78bfa','지유':'#d4a853','하음':'#fb923c','이슬':'#c084fc' }
+
+const svgEl = document.getElementById('svg-overlay')
+const wrap  = document.getElementById('canvas-wrap')
+
+// 드래그 상태
+let drag = null // { type:'move'|'resize', el, m, startX, startY, origX, origY, origW, origH }
+
+function getSvgScale() {
+  // container 크기 vs viewBox → object-fit: cover (slice) 스케일
+  const cw = wrap.clientWidth, ch = wrap.clientHeight
+  return Math.max(cw / IW, ch / IH)
+}
+
+function screenToSvg(screenX, screenY) {
+  const rect = wrap.getBoundingClientRect()
+  const scale = getSvgScale()
+  const ox = (wrap.clientWidth  - IW * scale) / 2
+  const oy = 0 // YMin
+  return {
+    x: (screenX - rect.left - ox) / scale,
+    y: (screenY - rect.top  - oy) / scale,
+  }
+}
+
+function updateHandle(m) {
+  const zone   = svgEl.querySelector(`.zone[data-m="${m}"]`)
+  const handle = svgEl.querySelector(`.handle[data-m="${m}"]`)
+  const x = +zone.getAttribute('x'), y = +zone.getAttribute('y')
+  const w = +zone.getAttribute('width'), h = +zone.getAttribute('height')
+  handle.setAttribute('x', x + w - 7)
+  handle.setAttribute('y', y + h - 7)
+}
+MEMBERS.forEach(updateHandle)
+
+function onPointerDown(e) {
+  const el = e.target
+  if (el.classList.contains('handle')) {
+    const m = el.dataset.m
+    const zone = svgEl.querySelector(`.zone[data-m="${m}"]`)
+    drag = {
+      type: 'resize', el: zone, m,
+      startX: e.clientX, startY: e.clientY,
+      origX: +zone.getAttribute('x'), origY: +zone.getAttribute('y'),
+      origW: +zone.getAttribute('width'), origH: +zone.getAttribute('height'),
+    }
+    e.preventDefault()
+  } else if (el.classList.contains('zone')) {
+    const m = el.dataset.m
+    drag = {
+      type: 'move', el, m,
+      startX: e.clientX, startY: e.clientY,
+      origX: +el.getAttribute('x'), origY: +el.getAttribute('y'),
+      origW: +el.getAttribute('width'), origH: +el.getAttribute('height'),
+    }
+    el.classList.add('active')
+    e.preventDefault()
+  }
+}
+
+function onPointerMove(e) {
+  if (!drag) return
+  const scale = getSvgScale()
+  const dx = (e.clientX - drag.startX) / scale
+  const dy = (e.clientY - drag.startY) / scale
+
+  if (drag.type === 'move') {
+    drag.el.setAttribute('x', Math.round(drag.origX + dx))
+    drag.el.setAttribute('y', Math.round(drag.origY + dy))
+  } else {
+    drag.el.setAttribute('width',  Math.max(20, Math.round(drag.origW + dx)))
+    drag.el.setAttribute('height', Math.max(20, Math.round(drag.origH + dy)))
+  }
+  updateHandle(drag.m)
+  updateOutput()
+}
+
+function onPointerUp() {
+  if (drag) {
+    drag.el.classList.remove('active')
+    drag = null
+  }
+}
+
+svgEl.addEventListener('pointerdown', onPointerDown)
+window.addEventListener('pointermove', onPointerMove)
+window.addEventListener('pointerup',   onPointerUp)
+
+function updateOutput() {
+  const lines = MEMBERS.map(m => {
+    const z = svgEl.querySelector(`.zone[data-m="${m}"]`)
+    const x1 = +z.getAttribute('x'), y1 = +z.getAttribute('y')
+    const x2 = x1 + +z.getAttribute('width')
+    const y2 = y1 + +z.getAttribute('height')
+    const r  = Math.round((x2 - x1) * 0.4)
+    const d  = `M${x1+r},${y1} Q${x1},${y1} ${x1},${y1+r} L${x1},${y2} L${x2},${y2} L${x2},${y1+r} Q${x2},${y1} ${x2-r},${y1} Z`
+    return `<!-- ${m} -->\n<path class="member-zone" data-member="${m}"\n  d="${d}"/>`
+  })
+  document.getElementById('output').value = lines.join('\n\n')
+
+  // zone info
+  const list = document.getElementById('zone-list')
+  list.innerHTML = MEMBERS.map(m => {
+    const z = svgEl.querySelector(`.zone[data-m="${m}"]`)
+    const x1 = +z.getAttribute('x'), y1 = +z.getAttribute('y')
+    const w = +z.getAttribute('width'), h = +z.getAttribute('height')
+    return `<div class="zone-info"><span style="background:${COLORS[m]}"></span>${m}: x${x1} y${y1} ${w}×${h}</div>`
+  }).join('')
+}
+
+function copyOutput() {
+  const ta = document.getElementById('output')
+  navigator.clipboard.writeText(ta.value).then(() => alert('복사 완료!'))
+}
+
+updateOutput()
+</script>
+</body>
+</html>
