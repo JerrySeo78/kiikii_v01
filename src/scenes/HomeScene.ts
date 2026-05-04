@@ -48,7 +48,7 @@ export class HomeScene extends Phaser.Scene {
     this.setupTabBar()
   }
 
-  private setupMemberList(selected: string) {
+  private setupMemberList(_selected: string) {
     const list = document.getElementById('home-member-list')!
     list.innerHTML = ''
     const others = Object.keys(MEMBER_FILE)
