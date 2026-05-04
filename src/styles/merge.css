@@ -1,0 +1,158 @@
+/* ── 머지 게임 화면 ── */
+
+#merge-screen {
+  display: none;
+  position: absolute; inset: 0;
+  z-index: 10;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  pointer-events: none;
+}
+#merge-screen.visible { display: block; }
+
+/* 상단 바: match3 구조 그대로 재사용 */
+#merge-top-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+  padding: 14px 10px 4px;
+  pointer-events: none;
+}
+
+/* ── 중간 패널 ── */
+#mg-middle {
+  position: absolute;
+  top: 120px;
+  left: 0; right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: stretch;
+  padding: 0 8px;
+  gap: 8px;
+  pointer-events: none;
+}
+
+#mg-char-area {
+  flex: 0 0 38%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+}
+
+#mg-speech-bubble {
+  position: absolute;
+  top: -8px; right: -8px;
+  background: rgba(255,255,255,0.95);
+  border: 1.5px solid rgba(255,180,220,0.6);
+  border-radius: 14px 14px 14px 4px;
+  padding: 7px 10px;
+  font-size: 12px; font-weight: 600; color: #5a3050;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(200,80,140,0.15);
+  white-space: nowrap; z-index: 1;
+}
+
+#mg-char-clip {
+  width: 100%; height: 130px; overflow: hidden;
+}
+#mg-char-img {
+  display: block; width: 100%; height: auto;
+  object-fit: contain; object-position: top center;
+}
+
+#mg-char-name {
+  background: rgba(255,160,200,0.92);
+  border-radius: 20px; padding: 4px 14px;
+  font-size: 15px; font-weight: 800; color: #fff;
+  box-shadow: 0 2px 6px rgba(200,60,120,0.3);
+  pointer-events: auto;
+}
+#mg-char-name span:first-child,
+#mg-char-name span:last-child { color: #ffe0f0; font-size: 12px; }
+
+#mg-right-panel {
+  flex: 1;
+  display: flex; flex-direction: column;
+  gap: 6px;
+  align-self: flex-start;
+  padding-top: 4px;
+}
+
+#mg-stage-card {
+  background: rgba(255,248,252,0.92);
+  border: 2px solid rgba(255,160,200,0.6);
+  border-radius: 16px;
+  box-shadow: 0 3px 12px rgba(200,80,140,0.2);
+  overflow: hidden;
+}
+#mg-stage-banner {
+  background: linear-gradient(135deg, #ff7eb3 0%, #ff4495 100%);
+  color: #fff; font-size: 13px; font-weight: 900;
+  text-align: center; padding: 5px 0;
+  letter-spacing: 0.05em;
+}
+#mg-stage-body {
+  display: flex; align-items: stretch;
+  padding: 6px; gap: 0;
+}
+.mg-info-block {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 2px;
+}
+.mg-info-key { font-size: 10px; color: #ff6699; font-weight: 700; }
+.mg-info-val { font-size: 18px; font-weight: 900; color: #ff4495; line-height: 1; }
+.mg-info-sep { width: 1px; background: rgba(220,140,190,0.4); margin: 2px 4px; }
+
+#mg-mission-panel {
+  background: rgba(255,248,252,0.92);
+  border: 2px solid rgba(255,160,200,0.6);
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(200,80,140,0.15);
+  overflow: hidden;
+}
+.mg-mission-title {
+  background: linear-gradient(135deg, #f0b8e0 0%, #e890cc 100%);
+  color: #5a1040; font-size: 11px; font-weight: 800;
+  text-align: center; padding: 3px 0; letter-spacing: 0.1em;
+}
+.mg-mission-items {
+  display: flex; align-items: center; padding: 5px 8px; gap: 0;
+}
+.mg-mission-item {
+  flex: 1; display: flex; align-items: center;
+  justify-content: center; gap: 5px;
+}
+.mg-mission-item img { width: 30px; height: 30px; object-fit: contain; }
+.mg-mission-label { font-size: 11px; color: #5a3050; line-height: 1.4; }
+.mg-mission-label b { font-size: 14px; color: #d03080; }
+.mg-mission-divider {
+  width: 1px; height: 36px;
+  background: rgba(220,140,190,0.4); margin: 0 4px;
+}
+
+/* 로고: match3-logo 와 동일한 스타일 */
+#merge-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  pointer-events: auto;
+  gap: 1px;
+  overflow: visible;
+  white-space: nowrap;
+  padding-right: 10px;
+}
+#merge-logo .logo-heart  { font-size: 13px; color: #ff4495; }
+#merge-logo .logo-top {
+  font-size: 18px; font-weight: 900; font-style: italic;
+  padding: 0 4px;
+  background: linear-gradient(180deg, #ffe0a0 0%, #ffb06a 40%, #ff7eb3 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+#merge-logo .logo-bottom {
+  font-size: 22px; font-weight: 900; font-style: italic; letter-spacing: 0.08em;
+  padding: 0 10px 0 4px;
+  background: linear-gradient(180deg, #ffd0e8 0%, #ff6fb0 50%, #e83880 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}

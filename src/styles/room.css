@@ -1,0 +1,339 @@
+/* ── 멤버 룸 화면 ── */
+#room-screen {
+  display: none;
+  position: absolute; inset: 0;
+  z-index: 10;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+#room-screen.visible { display: block; }
+
+#room-bg {
+  position: absolute;
+  top: -22%; left: 0; right: 0;
+  width: 100%; height: 122%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* 캐릭터 */
+#room-character {
+  position: absolute;
+  width: 43vw; height: 43vw;
+  max-width: 141px; max-height: 141px;
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+  background-position-x: 0%;
+  z-index: 15;
+  transition: left 0.6s linear, bottom 0.6s linear;
+}
+
+@keyframes room-walk {
+  from { background-position-x: 0%; }
+  to   { background-position-x: 150%; }
+}
+
+/* 말풍선 */
+#room-bubble {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.93);
+  border-radius: 16px;
+  border: 1.5px solid rgba(255,190,220,0.6);
+  padding: 8px 14px;
+  font-size: 11px;
+  color: #555;
+  white-space: nowrap;
+  z-index: 16;
+  box-shadow: 0 2px 8px rgba(200,80,140,0.15);
+}
+#room-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px; left: 20px;
+  border: 8px solid transparent;
+  border-top-color: rgba(255,255,255,0.93);
+  border-bottom: none;
+}
+
+/* 상단 헤더 */
+#room-header {
+  position: absolute;
+  top: 12px; left: 12px; right: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+#room-back-btn, #room-help-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,190,220,0.7);
+  background: rgba(255,248,232,0.92);
+  font-size: 20px;
+  font-weight: 900;
+  color: #d63f80;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(200,80,140,0.2);
+  pointer-events: auto;
+  line-height: 1;
+}
+
+#room-title {
+  background: linear-gradient(135deg, #ff6fb0, #ff4495);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  padding: 8px 18px;
+  border-radius: 24px;
+  box-shadow: 0 3px 12px rgba(220,40,100,0.35);
+  text-shadow: 0 1px 3px rgba(180,0,60,0.3);
+}
+
+/* 좌측 멤버 카드 */
+#room-member-card {
+  position: absolute;
+  top: 68px; left: 8px;
+  width: 118px;
+  background: rgba(255,248,232,0.93);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1.5px solid rgba(230,200,160,0.6);
+  box-shadow: 2px 2px 12px rgba(200,80,140,0.15);
+  padding: 10px 10px 8px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.room-card-label {
+  font-size: 9px;
+  color: #ff4495;
+  font-weight: 700;
+  background: rgba(255,180,220,0.25);
+  border-radius: 8px;
+  padding: 2px 6px;
+  align-self: flex-start;
+}
+
+.room-member-name {
+  font-size: 22px;
+  font-weight: 900;
+  color: #222;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.room-lv-label {
+  font-size: 10px;
+  color: #999;
+  font-weight: 500;
+}
+
+.room-intimacy-bar {
+  width: 100%;
+  height: 6px;
+  background: #f0d0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.room-intimacy-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6fb0, #ff4495);
+  border-radius: 3px;
+}
+
+.room-card-score {
+  font-size: 9px;
+  color: #aaa;
+  text-align: right;
+}
+
+/* 친밀도 보상 버튼 */
+#room-reward-btn {
+  position: absolute;
+  top: calc(68px + 130px + 8px);
+  left: 8px;
+  width: 118px;
+  padding: 8px 0;
+  background: linear-gradient(90deg, #ff6fb0, #ff4495);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(220,40,100,0.3);
+  z-index: 20;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+/* 우측 액션 버튼 */
+#room-actions {
+  position: absolute;
+  top: 68px; right: 8px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.room-action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,248,232,0.93);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(230,200,160,0.6);
+  border-radius: 14px;
+  padding: 6px 10px 6px 6px;
+  cursor: pointer;
+  box-shadow: 1px 2px 8px rgba(200,80,140,0.12);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.room-action-icon {
+  width: 64px; height: 64px;
+  border-radius: 12px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.room-action-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #555;
+  white-space: nowrap;
+}
+
+/* 하단 패널 */
+#room-panel {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 20;
+  background: rgba(255,248,232,0.96);
+  backdrop-filter: blur(12px);
+  border-top: 1.5px solid rgba(230,200,160,0.5);
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: height 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  touch-action: none;
+}
+
+/* 드래그 핸들 */
+#room-panel-handle {
+  width: 100%;
+  padding: 10px 0 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: grab;
+  flex-shrink: 0;
+}
+#room-panel-handle::before {
+  content: '';
+  width: 36px; height: 4px;
+  background: rgba(200,140,170,0.4);
+  border-radius: 2px;
+}
+
+#room-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(230,200,160,0.3);
+  padding: 0 4px;
+}
+
+.room-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #b08080;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+
+.room-tab.active {
+  color: #d63f80;
+  border-bottom-color: #ff4495;
+  font-weight: 800;
+}
+
+/* 데코 시트 */
+#room-deco-wrap {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#room-deco-sheet {
+  position: relative;
+  width: 100%;
+}
+
+#room-deco-sheet img {
+  width: 100%;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.room-overlay-item {
+  position: absolute;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, background 0.15s;
+}
+
+.room-overlay-item:active {
+  background: rgba(255,68,149,0.12);
+}
+
+.room-overlay-item.selected {
+  box-shadow: 0 0 0 3px #ff4495;
+  background: rgba(255,68,149,0.1);
+}
+
+#room-bottom-btns {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px 16px;
+}
+
+.room-bottom-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 22px;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+.room-bottom-btn.save, .room-bottom-btn.preview {
+  background: rgba(255,240,248,0.9);
+  color: #c06090;
+  border: 1.5px solid rgba(255,190,220,0.5);
+}
+
+.room-bottom-btn.apply {
+  background: linear-gradient(90deg,#ff6fb0,#ff4495);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(220,40,100,0.35);
+}

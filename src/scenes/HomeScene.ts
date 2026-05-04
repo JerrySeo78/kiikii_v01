@@ -141,6 +141,12 @@ export class HomeScene extends Phaser.Scene {
     // 머지게임
     document.getElementById('mg-merge')?.addEventListener('click', () => {
       document.getElementById('minigame-select-screen')!.classList.remove('visible')
+      const screen = document.getElementById('home-screen')!
+      this.cameras.main.fadeOut(300, 0, 0, 0)
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        screen.classList.remove('visible')
+        this.scene.start('MergeScene')
+      })
     })
 
     // 3매칭게임
@@ -157,6 +163,12 @@ export class HomeScene extends Phaser.Scene {
     // 리듬게임
     document.getElementById('mg-rhythm')?.addEventListener('click', () => {
       document.getElementById('minigame-select-screen')!.classList.remove('visible')
+      const screen = document.getElementById('home-screen')!
+      this.cameras.main.fadeOut(300, 0, 0, 0)
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        screen.classList.remove('visible')
+        this.scene.start('RhythmScene')
+      })
     })
   }
 

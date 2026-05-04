@@ -1,0 +1,21 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: #1a0a14;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  width: 100%; max-width: 390px; height: 100dvh;
+  margin: 0 auto;
+  position: relative; overflow: hidden;
+}
+
+#game-container {
+  position: absolute; inset: 0;
+}
+#game-container canvas {
+  display: block !important;
+  width: 100% !important; height: 100% !important;
+}

@@ -1,0 +1,45 @@
+/* ── 리듬게임 화면 ── */
+
+#rhythm-screen {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: #0a0014;
+}
+#rhythm-screen.visible {
+  display: block;
+}
+
+#rhythm-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+#rhythm-close-btn {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  right: 16px;
+  z-index: 40;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 42, 157, 0.75);
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 14px rgba(255, 42, 157, 0.5);
+  transition: transform 0.15s ease;
+}
+#rhythm-close-btn:active {
+  transform: scale(0.9);
+}

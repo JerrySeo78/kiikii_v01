@@ -8,6 +8,15 @@ const MEMBER_FILE: Record<string, string> = {
   '이슬': 'leesol',
 }
 
+// 스프라이트가 오른쪽을 바라보는 멤버는 true (반전 기준이 반대)
+const MEMBER_SPRITE_FACES_RIGHT: Record<string, boolean> = {
+  'sui': false,
+  'kya': true,
+  'jiyu': true,
+  'haum': true,
+  'leesol': false,
+}
+
 const WALK_LINES = [
   '어디 가는 거예요? 🎀',
   '저도 같이 가요! ✨',
@@ -121,7 +130,8 @@ export class RoomScene extends Phaser.Scene {
       } else {
         direction = dy > 0 ? 'back' : 'front'  // 위로가면 뒷모습, 아래로가면 앞모습
       }
-      const flip = dx > 0  // 스프라이트가 왼쪽 방향이므로 오른쪽 이동 시 반전
+      const facesRight = MEMBER_SPRITE_FACES_RIGHT[this.fileKey] ?? false
+      const flip = facesRight !== (dx > 0)
 
       this.setWalkSprite(character, direction, flip)
 

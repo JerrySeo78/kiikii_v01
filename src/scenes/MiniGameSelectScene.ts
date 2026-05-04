@@ -9,7 +9,7 @@ export class MiniGameSelectScene extends Phaser.Scene {
     this.cameras.main.fadeIn(250, 0, 0, 0)
 
     document.getElementById('minigame-btn-merge')?.addEventListener('click', () => {
-      this.close(() => this.scene.start('HomeScene'))  // 머지게임 Scene으로 교체 예정
+      this.close(() => this.scene.start('MergeScene'))
     })
 
     document.getElementById('minigame-btn-match3')?.addEventListener('click', () => {

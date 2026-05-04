@@ -12,1219 +12,6 @@
   <!-- Android PWA -->
   <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="theme-color" content="#1a0a14"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html, body {
-      width: 100%; height: 100%; overflow: hidden;
-      background: #1a0a14;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    #app {
-      width: 100%; max-width: 390px; height: 100dvh;
-      margin: 0 auto;
-      position: relative; overflow: hidden;
-    }
-
-    #game-container {
-      position: absolute; inset: 0;
-    }
-    #game-container canvas {
-      display: block !important;
-      width: 100% !important; height: 100% !important;
-    }
-
-    /* ── 타이틀 화면 ── */
-    #boot-screen {
-      display: none;
-      position: absolute; inset: 0;
-      z-index: 10;
-    }
-    #boot-screen.visible { display: block; }
-
-    #boot-bg {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      object-position: center top;
-    }
-
-    #boot-btn-wrap {
-      position: absolute;
-      bottom: 8%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 62%;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      animation: btnFloat 2.4s ease-in-out infinite;
-    }
-    #boot-btn-wrap:active {
-      transform: translateX(-50%) scale(0.95);
-      animation: none;
-    }
-    #boot-btn-wrap:active #boot-btn {
-      filter: brightness(0.9);
-    }
-
-    #boot-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      padding: 14px 0;
-      border-radius: 50px;
-      background: linear-gradient(180deg, #fff8fa 0%, #ffe8f0 100%);
-      border: 2.5px solid #f4a0c0;
-      box-shadow: 0 4px 18px rgba(220, 80, 130, 0.35), inset 0 1px 0 rgba(255,255,255,0.9);
-      transition: filter 0.12s;
-    }
-
-    #boot-btn .sparkle {
-      color: #e0508a;
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    #boot-btn .label {
-      color: #d63f80;
-      font-size: clamp(17px, 4.5vw, 20px);
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    }
-
-    @keyframes btnFloat {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50%       { transform: translateX(-50%) translateY(-8px); }
-    }
-
-    /* ── 동영상 화면 ── */
-    #video-screen {
-      display: none;
-      position: absolute; inset: 0;
-      z-index: 10;
-      background: #000;
-    }
-    #video-screen.visible { display: block; }
-
-    #video-skip-btn {
-      position: absolute;
-      top: 20px;
-      right: 16px;
-      padding: 7px 18px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.15);
-      border: 1.5px solid rgba(255, 255, 255, 0.4);
-      color: #fff;
-      font-size: 14px;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-      letter-spacing: 0.03em;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: background 0.15s;
-    }
-    #video-skip-btn:active {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    /* ── 멤버 선택 화면 ── */
-    #select-member-screen {
-      display: none;
-      position: absolute; inset: 0;
-      z-index: 10;
-    }
-    #select-member-screen.visible { display: block; }
-
-    #select-member-bg {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      object-position: center top;
-    }
-
-    #member-zones {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      overflow: visible;
-    }
-
-    .member-zone {
-      fill: transparent;
-      stroke: transparent;
-      stroke-width: 12;
-      cursor: pointer;
-      transition: stroke 0.2s, filter 0.2s;
-    }
-
-    .member-zone[data-member="수이"].selected  { stroke: #f472b6; filter: drop-shadow(0 0 8px #f472b6aa); }
-    .member-zone[data-member="키아"].selected  { stroke: #a78bfa; filter: drop-shadow(0 0 8px #a78bfaaa); }
-    .member-zone[data-member="지유"].selected  { stroke: #d4a853; filter: drop-shadow(0 0 8px #d4a853aa); }
-    .member-zone[data-member="하음"].selected  { stroke: #fb923c; filter: drop-shadow(0 0 8px #fb923caa); }
-    .member-zone[data-member="이슬"].selected  { stroke: #c084fc; filter: drop-shadow(0 0 8px #c084fcaa); }
-
-    #select-member-btn-wrap {
-      position: absolute;
-      bottom: 8%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 62%;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      animation: btnFloat 2.4s ease-in-out infinite;
-    }
-    #select-member-btn-wrap:active {
-      transform: translateX(-50%) scale(0.95);
-      animation: none;
-    }
-    #select-member-btn-wrap:active #select-member-btn {
-      filter: brightness(0.9);
-    }
-
-    #select-member-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      padding: 14px 0;
-      border-radius: 50px;
-      background: linear-gradient(180deg, #fff8fa 0%, #ffe8f0 100%);
-      border: 2.5px solid #f4a0c0;
-      box-shadow: 0 4px 18px rgba(220, 80, 130, 0.35), inset 0 1px 0 rgba(255,255,255,0.9);
-      transition: filter 0.12s;
-    }
-
-    #select-member-btn .sparkle {
-      color: #e0508a;
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    #select-member-btn .label {
-      color: #d63f80;
-      font-size: clamp(17px, 4.5vw, 20px);
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    }
-
-    /* ── 멤버 룸 화면 ── */
-    #room-screen {
-      display: none;
-      position: absolute; inset: 0;
-      z-index: 10;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    }
-    #room-screen.visible { display: block; }
-
-    #room-bg {
-      position: absolute;
-      top: -22%; left: 0; right: 0;
-      width: 100%; height: 122%;
-      object-fit: cover;
-      object-position: center top;
-    }
-
-    /* 캐릭터 */
-    #room-character {
-      position: absolute;
-      width: 43vw; height: 43vw;
-      max-width: 141px; max-height: 141px;
-      background-repeat: no-repeat;
-      background-size: auto 100%;
-      background-position-x: 0%;
-      z-index: 15;
-      transition: left 0.6s linear, bottom 0.6s linear;
-    }
-
-    @keyframes room-walk {
-      from { background-position-x: 0%; }
-      to   { background-position-x: 150%; }
-    }
-
-    /* 말풍선 */
-    #room-bubble {
-      position: absolute;
-      bottom: 50%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255,255,255,0.93);
-      border-radius: 16px;
-      border: 1.5px solid rgba(255,190,220,0.6);
-      padding: 8px 14px;
-      font-size: 11px;
-      color: #555;
-      white-space: nowrap;
-      z-index: 16;
-      box-shadow: 0 2px 8px rgba(200,80,140,0.15);
-    }
-    #room-bubble::after {
-      content: '';
-      position: absolute;
-      bottom: -8px; left: 20px;
-      border: 8px solid transparent;
-      border-top-color: rgba(255,255,255,0.93);
-      border-bottom: none;
-    }
-
-    /* 상단 헤더 — 풀바 없이 떠있는 요소들 */
-    #room-header {
-      position: absolute;
-      top: 12px; left: 12px; right: 12px;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      pointer-events: none;
-    }
-
-    #room-back-btn, #room-help-btn {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      border: 2px solid rgba(255,190,220,0.7);
-      background: rgba(255,248,232,0.92);
-      font-size: 20px;
-      font-weight: 900;
-      color: #d63f80;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 2px 8px rgba(200,80,140,0.2);
-      pointer-events: auto;
-      line-height: 1;
-    }
-
-    #room-title {
-      background: linear-gradient(135deg, #ff6fb0, #ff4495);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      padding: 8px 18px;
-      border-radius: 24px;
-      box-shadow: 0 3px 12px rgba(220,40,100,0.35);
-      text-shadow: 0 1px 3px rgba(180,0,60,0.3);
-    }
-
-    /* 좌측 멤버 카드 */
-    #room-member-card {
-      position: absolute;
-      top: 68px; left: 8px;
-      width: 118px;
-      background: rgba(255,248,232,0.93);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      border: 1.5px solid rgba(230,200,160,0.6);
-      box-shadow: 2px 2px 12px rgba(200,80,140,0.15);
-      padding: 10px 10px 8px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .room-card-label {
-      font-size: 9px;
-      color: #ff4495;
-      font-weight: 700;
-      background: rgba(255,180,220,0.25);
-      border-radius: 8px;
-      padding: 2px 6px;
-      align-self: flex-start;
-    }
-
-    .room-member-name {
-      font-size: 22px;
-      font-weight: 900;
-      color: #222;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-    }
-
-    .room-lv-label {
-      font-size: 10px;
-      color: #999;
-      font-weight: 500;
-    }
-
-    .room-intimacy-bar {
-      width: 100%;
-      height: 6px;
-      background: #f0d0e0;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .room-intimacy-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #ff6fb0, #ff4495);
-      border-radius: 3px;
-    }
-
-    .room-card-score {
-      font-size: 9px;
-      color: #aaa;
-      text-align: right;
-    }
-
-    /* 친밀도 보상 — 카드 아래 별도 버튼 */
-    #room-reward-btn {
-      position: absolute;
-      top: calc(68px + 130px + 8px);
-      left: 8px;
-      width: 118px;
-      padding: 8px 0;
-      background: linear-gradient(90deg, #ff6fb0, #ff4495);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      text-align: center;
-      box-shadow: 0 3px 10px rgba(220,40,100,0.3);
-      z-index: 20;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    }
-
-    /* 우측 액션 버튼 */
-    #room-actions {
-      position: absolute;
-      top: 68px; right: 8px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .room-action-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      background: rgba(255,248,232,0.93);
-      backdrop-filter: blur(8px);
-      border: 1.5px solid rgba(230,200,160,0.6);
-      border-radius: 14px;
-      padding: 6px 10px 6px 6px;
-      cursor: pointer;
-      box-shadow: 1px 2px 8px rgba(200,80,140,0.12);
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .room-action-icon {
-      width: 64px; height: 64px;
-      border-radius: 12px;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      flex-shrink: 0;
-    }
-
-    .room-action-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: #555;
-      white-space: nowrap;
-    }
-
-    /* 하단 패널 */
-    #room-panel {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      z-index: 20;
-      background: rgba(255,248,232,0.96);
-      backdrop-filter: blur(12px);
-      border-top: 1.5px solid rgba(230,200,160,0.5);
-      border-radius: 20px 20px 0 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      transition: height 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-      touch-action: none;
-    }
-
-    /* 드래그 핸들 */
-    #room-panel-handle {
-      width: 100%;
-      padding: 10px 0 4px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: grab;
-      flex-shrink: 0;
-    }
-    #room-panel-handle::before {
-      content: '';
-      width: 36px; height: 4px;
-      background: rgba(200,140,170,0.4);
-      border-radius: 2px;
-    }
-
-    #room-tabs {
-      display: flex;
-      border-bottom: 1px solid rgba(230,200,160,0.3);
-      padding: 0 4px;
-    }
-
-    .room-tab {
-      flex: 1;
-      text-align: center;
-      padding: 10px 2px 8px;
-      font-size: 10px;
-      font-weight: 600;
-      color: #b08080;
-      cursor: pointer;
-      white-space: nowrap;
-      border-bottom: 2px solid transparent;
-    }
-
-    .room-tab.active {
-      color: #d63f80;
-      border-bottom-color: #ff4495;
-      font-weight: 800;
-    }
-
-    /* 데코 시트 */
-    #room-deco-wrap {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    #room-deco-sheet {
-      position: relative;
-      width: 100%;
-    }
-
-    #room-deco-sheet img {
-      width: 100%;
-      display: block;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    .room-overlay-item {
-      position: absolute;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: box-shadow 0.15s, background 0.15s;
-    }
-
-    .room-overlay-item:active {
-      background: rgba(255,68,149,0.12);
-    }
-
-    .room-overlay-item.selected {
-      box-shadow: 0 0 0 3px #ff4495;
-      background: rgba(255,68,149,0.1);
-    }
-
-    #room-bottom-btns {
-      display: flex;
-      gap: 8px;
-      padding: 8px 12px 16px;
-    }
-
-    .room-bottom-btn {
-      flex: 1;
-      padding: 10px 0;
-      border-radius: 22px;
-      border: none;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    }
-
-    .room-bottom-btn.save, .room-bottom-btn.preview {
-      background: rgba(255,240,248,0.9);
-      color: #c06090;
-      border: 1.5px solid rgba(255,190,220,0.5);
-    }
-
-    .room-bottom-btn.apply {
-      background: linear-gradient(90deg,#ff6fb0,#ff4495);
-      color: #fff;
-      box-shadow: 0 3px 10px rgba(220,40,100,0.35);
-    }
-
-    /* ── 미니게임 선택 ── */
-    #minigame-select-screen {
-      display: none;
-      position: absolute; inset: 0;
-      z-index: 50;
-      background: rgba(30,10,20,0.6);
-      backdrop-filter: blur(3px);
-      align-items: center;
-      justify-content: center;
-    }
-    #minigame-select-screen.visible { display: flex; }
-
-    #minigame-select-card {
-      position: relative;
-      width: min(88%, 360px);
-    }
-    #minigame-select-card img {
-      width: 100%;
-      display: block;
-      border-radius: 24px;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    .mg-overlay {
-      position: absolute;
-      cursor: pointer;
-      border-radius: 14px;
-      -webkit-tap-highlight-color: transparent;
-      transition: background 0.12s;
-    }
-    .mg-overlay:active { background: rgba(255,255,255,0.18); }
-
-    /* ── 홈 화면 ── */
-    #home-screen {
-      display: none;
-      position: absolute; inset: 0;
-      z-index: 10;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    }
-    #home-screen.visible { display: block; }
-
-    #home-bg {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      object-position: center top;
-    }
-
-    /* ── 홈 헤더 ── */
-    #home-header {
-      position: absolute;
-      top: env(safe-area-inset-top, 6px);
-      left: 8px; right: 8px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    /* 1행: 아바타 + 레벨 + 우측 아이콘 */
-    .hdr-row1 {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .hdr-avatar-wrap {
-      position: relative;
-      width: 108px; height: 108px;
-      flex-shrink: 0;
-      cursor: pointer;
-    }
-    .hdr-avatar-frame {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: contain;
-      z-index: 2;
-    }
-    .hdr-avatar-img {
-      position: absolute;
-      inset: 10%;
-      width: 80%; height: 80%;
-      border-radius: 50%;
-      z-index: 1;
-      overflow: hidden;
-      background-color: #f5e0ec;
-      background-repeat: no-repeat;
-      background-size: auto 145%;
-      background-position: top center;
-    }
-
-    .hdr-level {
-      background: rgba(255, 240, 248, 0.82);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.7);
-      border-radius: 20px;
-      padding: 5px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #d63f80;
-      white-space: nowrap;
-    }
-
-    .hdr-actions {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(255, 240, 248, 0.82);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.7);
-      border-radius: 20px;
-      padding: 5px 8px;
-    }
-    .hdr-actions button {
-      background: none;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      width: 28px; height: 28px;
-      display: flex; align-items: center; justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .hdr-actions button img {
-      width: 26px; height: 26px;
-      object-fit: contain;
-    }
-
-    /* 2행: 스탯 바 */
-    .hdr-row2 {
-      background: rgba(255, 240, 248, 0.82);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.7);
-      border-radius: 20px;
-      padding: 6px 10px 6px 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .hdr-nickname {
-      font-size: 12px;
-      font-weight: 700;
-      color: #5a3050;
-      white-space: nowrap;
-      margin-right: 2px;
-    }
-    .hdr-flower { font-size: 11px; margin-right: 4px; }
-
-    .hdr-stat {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      flex: 1;
-      min-width: 0;
-    }
-    .hdr-stat img {
-      width: 20px; height: 20px;
-      object-fit: contain;
-      flex-shrink: 0;
-    }
-    .hdr-stat-info {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-    .hdr-stat-val {
-      font-size: 10px;
-      font-weight: 700;
-      color: #5a3050;
-      white-space: nowrap;
-    }
-    .hdr-stat-bar {
-      height: 3px;
-      background: #f0d0e0;
-      border-radius: 2px;
-      margin-top: 1px;
-      width: 100%;
-      min-width: 28px;
-    }
-    .hdr-stat-bar-fill {
-      height: 100%;
-      border-radius: 2px;
-      background: linear-gradient(90deg, #ff6b9d, #ffb3d1);
-    }
-    .hdr-stat-label {
-      font-size: 8px;
-      color: #e05090;
-      font-weight: 600;
-    }
-
-    .hdr-plus {
-      background: rgba(255,180,210,0.4);
-      border: 1px solid rgba(255,150,190,0.5);
-      border-radius: 50%;
-      width: 16px; height: 16px;
-      font-size: 11px;
-      color: #d63f80;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      padding: 0;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .hdr-divider {
-      width: 1px;
-      height: 24px;
-      background: rgba(200,150,180,0.3);
-      flex-shrink: 0;
-    }
-
-    /* ── 하단 탭바 ── */
-    #home-tabbar {
-      position: absolute;
-      bottom: 10px;
-      left: 10px; right: 10px;
-      z-index: 20;
-      display: flex;
-      align-items: stretch;
-      background: rgba(255, 248, 232, 0.95);
-      backdrop-filter: blur(12px);
-      border-radius: 24px;
-      border: 1.5px solid rgba(230, 200, 160, 0.6);
-      box-shadow: 0 4px 20px rgba(220,80,140,0.18);
-    }
-
-    .tab-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 0 6px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      gap: 3px;
-    }
-
-    .tab-item img {
-      width: auto;
-      height: auto;
-      max-width: 36px;
-      max-height: 36px;
-      object-fit: contain;
-    }
-
-    .tab-item span {
-      font-size: 12px;
-      font-weight: 600;
-      color: #c06090;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-      letter-spacing: -0.02em;
-    }
-
-    .tab-item.active img  { filter: drop-shadow(0 0 4px rgba(220,80,140,0.6)); }
-    .tab-item.active span { color: #d63f80; }
-
-    /* ── 홈 캐릭터 스프라이트 ── */
-    #home-character {
-      position: absolute;
-      bottom: 30%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 68vw;
-      height: 68vw;
-      max-width: 289px;
-      max-height: 289px;
-      background-repeat: no-repeat;
-      background-size: contain;
-      background-position: center bottom;
-      z-index: 15;
-    }
-
-    @keyframes sprite-idle {
-      from { background-position-x: 0%; }
-      to   { background-position-x: 150%; }  /* 3프레임: 0→50→100% */
-    }
-
-    /* ── 탭 클릭 애니메이션 ── */
-    @keyframes tapPop {
-      0%   { transform: scale(1); }
-      40%  { transform: scale(1.18); }
-      100% { transform: scale(1); }
-    }
-    .tap-pop {
-      animation: tapPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-
-    /* ── 친밀도 카드 ── */
-    #home-intimacy-card {
-      position: absolute;
-      top: 23%;
-      left: 6px;
-      width: 158px;
-      background: rgba(255, 248, 232, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 18px;
-      border: 1.5px solid rgba(230, 200, 160, 0.6);
-      box-shadow: 3px 3px 14px rgba(200, 80, 140, 0.18);
-      padding: 12px 12px 12px;
-      transform: rotate(-3deg);
-      transform-origin: top left;
-      z-index: 25;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .intimacy-heart {
-      position: absolute;
-      top: -10px;
-      right: 12px;
-      font-size: 22px;
-      color: #ff4495;
-      filter: drop-shadow(0 1px 3px rgba(220,80,140,0.5));
-    }
-
-    .intimacy-top-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .intimacy-member-circle {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #ff6fb0, #ff4495);
-      color: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(220,60,130,0.35);
-      flex-shrink: 0;
-    }
-
-    .intimacy-text {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .intimacy-level {
-      font-size: 10px;
-      color: #c06090;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    .intimacy-score {
-      font-size: 19px;
-      font-weight: 800;
-      color: #222;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-    }
-
-    .intimacy-score-sub {
-      font-size: 11px;
-      font-weight: 500;
-      color: #bbb;
-    }
-
-    .intimacy-bar {
-      width: 100%;
-      height: 7px;
-      background: #f0d0e0;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .intimacy-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #ff6fb0, #ff4495);
-      border-radius: 4px;
-    }
-
-    .intimacy-room-btn {
-      width: 100%;
-      padding: 7px 0;
-      background: linear-gradient(90deg, #ff6fb0, #ff4495);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      box-shadow: 0 2px 6px rgba(220,60,130,0.3);
-      letter-spacing: -0.01em;
-    }
-
-    /* ── 오늘의 플랜 카드 ── */
-    #home-plan-card {
-      position: absolute;
-      top: 38%;
-      right: 5px;
-      width: 115px;
-      background: rgba(255, 248, 232, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 18px;
-      border: 1.5px solid rgba(230, 200, 160, 0.6);
-      box-shadow: -3px 3px 14px rgba(200, 80, 140, 0.18);
-      padding: 12px;
-      z-index: 25;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .plan-title {
-      font-size: 12px;
-      font-weight: 800;
-      color: #222;
-      letter-spacing: -0.02em;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-bottom: 2px;
-    }
-
-    .plan-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      font-size: 9px;
-      color: #444;
-      line-height: 1.3;
-    }
-
-    .plan-check {
-      width: 14px;
-      height: 14px;
-      border-radius: 3px;
-      border: 1.5px solid #ffaad0;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      margin-top: 1px;
-    }
-
-    .plan-check.done {
-      background: #ff4495;
-      border-color: #ff4495;
-      color: #fff;
-    }
-
-    .plan-divider {
-      height: 1px;
-      background: rgba(255,180,220,0.4);
-      margin: 2px 0;
-    }
-
-    .plan-reward {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 9px;
-      color: #c06090;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    /* ── 하단 액션 바 ── */
-    #home-action-bar {
-      position: absolute;
-      bottom: 88px;
-      left: 0; right: 0;
-      z-index: 22;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 0 8px;
-    }
-
-    .action-side-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      width: 58px;
-      height: 58px;
-      background: rgba(255, 248, 232, 0.95);
-      backdrop-filter: blur(8px);
-      border-radius: 16px;
-      border: 1.5px solid rgba(230, 200, 160, 0.6);
-      box-shadow: 0 2px 10px rgba(200, 80, 140, 0.15);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      flex-shrink: 0;
-    }
-
-    .action-side-btn .icon { font-size: 22px; line-height: 1; }
-    .action-side-btn .label {
-      font-size: 10px;
-      font-weight: 700;
-      color: #c06090;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    }
-
-    #home-play-btn {
-      flex: 1;
-      height: 58px;
-      background: linear-gradient(90deg, #ff6fb0 0%, #ff2277 50%, #ff6fb0 100%);
-      border-radius: 30px;
-      border: none;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      box-shadow: 0 4px 20px rgba(220, 40, 100, 0.45),
-                  inset 0 1px 0 rgba(255,255,255,0.3);
-      position: relative;
-      overflow: hidden;
-    }
-
-    #home-play-btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 60%);
-      border-radius: inherit;
-    }
-
-    #home-play-btn .sparkle {
-      color: rgba(255,255,255,0.85);
-      font-size: 13px;
-    }
-
-    #home-play-btn .text {
-      color: #fff;
-      font-size: 17px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-      text-shadow: 0 1px 3px rgba(180,0,60,0.3);
-    }
-
-    #home-play-btn .plane { font-size: 18px; }
-
-    /* ── 멤버 선택 버튼 ── */
-    #home-member-select-btn {
-      position: absolute;
-      top: calc(23% + 143px);
-      left: 5px;
-      z-index: 26;
-      padding: 8px 20px;
-      border-radius: 24px;
-      background: linear-gradient(90deg, #ff6fb0, #ff4495);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 3px 10px rgba(220,60,130,0.35);
-      letter-spacing: -0.01em;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* ── 멤버 리스트 ── */
-    #home-member-list {
-      position: absolute;
-      top: calc(19% + 185px);
-      left: 5px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      z-index: 25;
-      overflow: hidden;
-      max-height: 0;
-      pointer-events: none;
-    }
-
-    #home-member-list.open {
-      max-height: 400px;
-      pointer-events: auto;
-      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    #home-member-list.closing {
-      max-height: 0;
-      pointer-events: none;
-      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .member-list-item {
-      width: 118px;
-      backdrop-filter: blur(8px);
-      border-radius: 14px;
-      border: 1.5px solid rgba(255, 190, 220, 0.5);
-      box-shadow: 2px 2px 10px rgba(200, 80, 140, 0.12);
-      padding: 7px 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      opacity: 0;
-      transform: translateY(-12px);
-      transition: opacity 0.25s, transform 0.25s;
-    }
-
-    #home-member-list.open .member-list-item { opacity: 1; transform: translateY(0); }
-    #home-member-list.open .member-list-item:nth-child(1) { transition-delay: 0.05s; }
-    #home-member-list.open .member-list-item:nth-child(2) { transition-delay: 0.10s; }
-    #home-member-list.open .member-list-item:nth-child(3) { transition-delay: 0.15s; }
-    #home-member-list.open .member-list-item:nth-child(4) { transition-delay: 0.20s; }
-
-    #home-member-list.closing .member-list-item { opacity: 0; transform: translateY(-12px); }
-    #home-member-list.closing .member-list-item:nth-child(1) { transition-delay: 0.15s; }
-    #home-member-list.closing .member-list-item:nth-child(2) { transition-delay: 0.10s; }
-    #home-member-list.closing .member-list-item:nth-child(3) { transition-delay: 0.05s; }
-    #home-member-list.closing .member-list-item:nth-child(4) { transition-delay: 0.00s; }
-
-    .member-list-item:active { filter: brightness(0.95); }
-
-    .member-list-thumb {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      background-size: cover;
-      background-position: top center;
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-
-    .member-list-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .member-list-name {
-      font-size: 14px;
-      font-weight: 800;
-      color: #222;
-      letter-spacing: -0.02em;
-      white-space: nowrap;
-    }
-
-    .member-list-trait {
-      font-size: 10px;
-      color: #a06080;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      white-space: nowrap;
-    }
-
-    .member-list-arrow {
-      font-size: 26px;
-      font-weight: 900;
-      color: #c080a8;
-      flex-shrink: 0;
-      line-height: 1;
-    }
-  </style>
 </head>
 <body>
 <div id="app">
@@ -1447,6 +234,175 @@
 
   </div>
 
+  <!-- ── Match3 게임 화면 ── -->
+  <div id="match3-screen">
+
+    <!-- 상단 바 -->
+    <div id="match3-top-bar">
+      <div class="m3-bar-row1">
+        <div id="match3-logo">
+          <span class="logo-heart">♥</span>
+          <span class="logo-top">WaiKiiKii</span>
+          <span class="logo-bottom">TOUR</span>
+        </div>
+        <div class="m3-spacer"></div>
+        <div class="m3-icon-btn">⚙</div>
+        <div class="m3-icon-btn" id="match3-close-btn">✕</div>
+      </div>
+      <div class="m3-bar-row2">
+        <div class="m3-resource">
+          <span class="m3-heart">♥</span>
+          <span class="m3-val">5 MAX</span>
+          <span class="m3-plus">+</span>
+        </div>
+        <div class="m3-resource">
+          <span class="m3-val">💎 250</span>
+          <span class="m3-plus">+</span>
+        </div>
+        <div class="m3-resource">
+          <span class="m3-val">🪙 12,350</span>
+          <span class="m3-plus">+</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 중간: 캐릭터(왼) + 스테이지/미션(오른) -->
+    <div id="m3-middle">
+
+      <!-- 왼쪽: 캐릭터 영역 -->
+      <div id="m3-char-area">
+        <div id="m3-speech-bubble">기념품을<br>모아 볼까요?</div>
+        <div id="m3-char-clip">
+          <img id="m3-char-img" src="assets/characters/originals/sui.png" alt="">
+        </div>
+        <div id="m3-char-name"><span>♥</span> <span id="m3-char-label">수이</span> <span>♥</span></div>
+      </div>
+
+      <!-- 오른쪽: 스테이지 카드 + 미션 패널 -->
+      <div id="m3-right-panel">
+
+        <!-- 스테이지 카드 -->
+        <div id="m3-stage-card">
+          <div id="m3-stage-banner">스테이지 <span id="m3-stage-num">1</span></div>
+          <div id="m3-stage-body">
+            <div class="m3-info-block m3-info-block--narrow">
+              <span class="m3-info-key">남은 이동</span>
+              <span class="m3-info-val moves" id="m3-moves">30</span>
+            </div>
+            <div class="m3-info-sep"></div>
+            <div class="m3-info-block">
+              <span class="m3-info-key">스코어</span>
+              <div class="m3-score-wrap">
+                <span class="m3-info-val score" id="m3-score">0</span>
+                <span class="m3-score-sep">/</span>
+                <span class="m3-score-target" id="m3-target-score">3,000</span>
+              </div>
+              <div class="m3-stars">
+                <span class="m3-star" id="m3-star-1">★</span>
+                <span class="m3-star" id="m3-star-2">★</span>
+                <span class="m3-star" id="m3-star-3">★</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 미션 패널 -->
+        <div id="m3-mission-panel">
+          <div class="m3-mission-title">✦ 미션 ✦</div>
+          <div class="m3-mission-items">
+            <div class="m3-mission-item">
+              <img src="assets/titles/tile_r2_c6.png" alt="camera">
+              <div class="m3-mission-label">카메라<br><b id="m3-mission-camera">12</b>개</div>
+            </div>
+            <div class="m3-mission-divider"></div>
+            <div class="m3-mission-item">
+              <img src="assets/titles/tile_r2_c5.png" alt="ticket">
+              <div class="m3-mission-label">티켓<br><b id="m3-mission-ticket">10</b>개</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /m3-right-panel -->
+    </div><!-- /m3-middle -->
+
+
+  </div>
+
+  <!-- ── 머지 게임 화면 ── -->
+  <div id="merge-screen">
+    <div id="merge-top-bar">
+      <div class="m3-bar-row1">
+        <div id="merge-logo">
+          <span class="logo-heart">♥</span>
+          <span class="logo-top">WaiKiiKii</span>
+          <span class="logo-bottom">TOUR</span>
+        </div>
+        <div class="m3-spacer"></div>
+        <div class="m3-icon-btn">⚙</div>
+        <div class="m3-icon-btn" id="merge-close-btn">✕</div>
+      </div>
+      <div class="m3-bar-row2">
+        <div class="m3-resource">
+          <span class="m3-heart">♥</span>
+          <span class="m3-val">5 MAX</span>
+          <span class="m3-plus">+</span>
+        </div>
+        <div class="m3-resource">
+          <span class="m3-val">💎 250</span>
+          <span class="m3-plus">+</span>
+        </div>
+        <div class="m3-resource">
+          <span class="m3-val">🪙 12,350</span>
+          <span class="m3-plus">+</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 중간: 캐릭터(왼) + 스테이지/미션(오른) -->
+    <div id="mg-middle">
+      <div id="mg-char-area">
+        <div id="mg-speech-bubble">합쳐서<br>성장해요!</div>
+        <div id="mg-char-clip">
+          <img id="mg-char-img" src="assets/characters/originals/sui.png" alt="">
+        </div>
+        <div id="mg-char-name"><span>♥</span> <span>수이</span> <span>♥</span></div>
+      </div>
+
+      <div id="mg-right-panel">
+        <div id="mg-stage-card">
+          <div id="mg-stage-banner">머지 레벨 <span id="mg-level-num">1</span></div>
+          <div id="mg-stage-body">
+            <div class="mg-info-block">
+              <span class="mg-info-key">최고 등급</span>
+              <span class="mg-info-val" id="mg-best-tier">-</span>
+            </div>
+            <div class="mg-info-sep"></div>
+            <div class="mg-info-block">
+              <span class="mg-info-key">머지 횟수</span>
+              <span class="mg-info-val" id="mg-merge-count">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="mg-mission-panel">
+          <div class="mg-mission-title">✦ 목표 ✦</div>
+          <div class="mg-mission-items">
+            <div class="mg-mission-item">
+              <img src="assets/merge_tiles/tile_r0_c4.png" alt="heart">
+              <div class="mg-mission-label">하트<br><b id="mg-mission-val">0</b> / <b id="mg-mission-target">5</b></div>
+            </div>
+            <div class="mg-mission-divider"></div>
+            <div class="mg-mission-item">
+              <img src="assets/merge_tiles/tile_r0_c2.png" alt="star">
+              <div class="mg-mission-label">스타<br><b id="mg-mission-val2">0</b> / <b id="mg-mission-target2">3</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- ── 멤버 룸 화면 ── -->
   <div id="room-screen">
     <img id="room-bg" src="assets/screens/5_room_bg.png" alt="">
@@ -1530,6 +486,13 @@
   </div>
 
 </div>
+
+  <!-- ── 리듬게임 화면 ── -->
+  <div id="rhythm-screen">
+    <button id="rhythm-close-btn">✕</button>
+    <iframe id="rhythm-iframe" src="" allow="camera; microphone" allowfullscreen></iframe>
+  </div>
+
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

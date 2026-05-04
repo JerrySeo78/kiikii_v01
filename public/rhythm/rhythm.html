@@ -1,0 +1,1487 @@
+﻿<!DOCTYPE html>
+<!-- saved from url=(0062)https://kr.object.ncloudstorage.com/motiondancetest/index.html -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0014">
+<title>NEON DANCE</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./css2" rel="stylesheet">
+
+<!-- MediaPipe Pose (camera_utils 제거 - Safari 호환성 위해 직접 프레임 처리) -->
+<script src="./pose.js" crossorigin="anonymous"></script>
+
+<style>
+:root{
+  --bg:#0a0014;
+  --bg2:#1a0030;
+  --neon-pink:#ff2a9d;
+  --neon-cyan:#00f5ff;
+  --neon-yellow:#fff200;
+  --neon-purple:#b026ff;
+  --text:#fff;
+  --grad: linear-gradient(135deg, #ff2a9d 0%, #b026ff 50%, #00f5ff 100%);
+}
+
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+
+html,body{
+  width:100%; height:100%;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Rajdhani', sans-serif;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+body{
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,42,157,.25), transparent 50%),
+    radial-gradient(circle at 80% 100%, rgba(0,245,255,.2), transparent 50%),
+    var(--bg);
+}
+
+/* Animated grid background */
+.grid-bg{
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(176,38,255,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(176,38,255,.08) 1px, transparent 1px);
+  background-size:40px 40px;
+  animation: gridMove 20s linear infinite;
+  pointer-events:none;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+@keyframes gridMove{
+  0%{background-position:0 0;}
+  100%{background-position:40px 40px;}
+}
+
+/* === SCREENS === */
+.screen{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:24px;
+  opacity:0; pointer-events:none;
+  transition:opacity .4s ease;
+  z-index:10;
+}
+.screen.active{ opacity:1; pointer-events:auto; }
+
+/* === START SCREEN === */
+#start-screen .title{
+  font-family:'Bebas Neue', sans-serif;
+  font-size:clamp(56px, 18vw, 96px);
+  letter-spacing:.04em;
+  line-height:.9;
+  text-align:center;
+  background: var(--grad);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  filter: drop-shadow(0 0 20px rgba(255,42,157,.5));
+  animation: titlePulse 2.4s ease-in-out infinite;
+}
+@keyframes titlePulse{
+  0%,100%{filter: drop-shadow(0 0 20px rgba(255,42,157,.5));}
+  50%{filter: drop-shadow(0 0 40px rgba(0,245,255,.6));}
+}
+#start-screen .subtitle{
+  font-family:'Major Mono Display', monospace;
+  font-size:14px;
+  letter-spacing:.3em;
+  color:var(--neon-cyan);
+  margin-top:16px;
+  opacity:.8;
+}
+#start-screen .desc{
+  margin-top:40px;
+  text-align:center;
+  font-size:16px;
+  line-height:1.6;
+  max-width:320px;
+  color:rgba(255,255,255,.7);
+}
+.btn{
+  margin-top:48px;
+  padding:18px 56px;
+  border:none;
+  border-radius:999px;
+  background: var(--grad);
+  color:#fff;
+  font-family:'Bebas Neue', sans-serif;
+  font-size:24px;
+  letter-spacing:.15em;
+  cursor:pointer;
+  box-shadow:
+    0 0 30px rgba(255,42,157,.5),
+    0 8px 32px rgba(0,0,0,.4);
+  position:relative;
+  overflow:hidden;
+  transform:translateZ(0);
+  transition:transform .15s ease;
+}
+.btn:active{ transform:scale(.96); }
+.btn::before{
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,.3), transparent);
+  transform:translateX(-100%);
+  animation: shine 2.5s infinite;
+}
+@keyframes shine{
+  0%,40%{transform:translateX(-100%);}
+  60%,100%{transform:translateX(100%);}
+}
+
+.start-hint{
+  margin-top:24px;
+  font-size:12px;
+  letter-spacing:.2em;
+  color:rgba(255,255,255,.4);
+  text-transform:uppercase;
+}
+
+/* === GAME SCREEN === */
+#game-screen{ padding:0; }
+#game-screen.active{ display:block; }
+
+.video-wrap{
+  position:absolute; inset:0;
+  overflow:hidden;
+}
+#video, #output-canvas{
+  position:absolute;
+  top:50%; left:50%;
+  transform: translate(-50%, -50%) scaleX(-1); /* mirror */
+  width:100%; height:100%;
+  object-fit:cover;
+}
+#video{ visibility:hidden; }
+#output-canvas{ z-index:2; }
+
+.video-overlay{
+  position:absolute; inset:0;
+  background:
+    linear-gradient(180deg, rgba(10,0,20,.55) 0%, transparent 25%, transparent 70%, rgba(10,0,20,.7) 100%);
+  z-index:3;
+  pointer-events:none;
+}
+
+/* HUD top */
+.hud-top{
+  position:absolute; top:0; left:0; right:0;
+  padding: max(16px, env(safe-area-inset-top)) 20px 12px;
+  display:flex; justify-content:space-between; align-items:flex-start;
+  z-index:5;
+}
+.score-box{
+  font-family:'Bebas Neue', sans-serif;
+}
+.score-label{
+  font-size:11px;
+  letter-spacing:.3em;
+  color:var(--neon-cyan);
+  opacity:.8;
+}
+.score-val{
+  font-size:42px;
+  line-height:1;
+  margin-top:2px;
+  text-shadow: 0 0 12px rgba(0,245,255,.6);
+}
+.combo-box{
+  text-align:right;
+  font-family:'Bebas Neue', sans-serif;
+}
+.combo-label{
+  font-size:11px;
+  letter-spacing:.3em;
+  color:var(--neon-pink);
+  opacity:.8;
+}
+.combo-val{
+  font-size:42px;
+  line-height:1;
+  margin-top:2px;
+  text-shadow: 0 0 12px rgba(255,42,157,.6);
+}
+
+.progress-bar{
+  position:absolute;
+  top: calc(max(16px, env(safe-area-inset-top)) + 60px);
+  left:20px; right:20px;
+  height:4px;
+  background:rgba(255,255,255,.12);
+  border-radius:2px;
+  overflow:hidden;
+  z-index:5;
+}
+.progress-fill{
+  height:100%;
+  background: var(--grad);
+  width:0%;
+  transition:width .1s linear;
+  box-shadow: 0 0 8px var(--neon-pink);
+}
+
+/* Target pose card */
+.target-card{
+  position:absolute;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  left:20px; right:20px;
+  background: rgba(10,0,20,.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border:1px solid rgba(255,42,157,.4);
+  border-radius:24px;
+  padding:16px;
+  display:flex; align-items:center; gap:16px;
+  z-index:5;
+  box-shadow:
+    0 0 40px rgba(255,42,157,.2),
+    inset 0 1px 0 rgba(255,255,255,.1);
+}
+.target-svg{
+  flex:0 0 90px; height:110px;
+  background:rgba(0,245,255,.06);
+  border-radius:16px;
+  border:1px solid rgba(0,245,255,.25);
+  padding:8px;
+}
+.target-info{ flex:1; min-width:0; }
+.target-name{
+  font-family:'Bebas Neue', sans-serif;
+  font-size:28px;
+  letter-spacing:.06em;
+  line-height:1;
+  color:#fff;
+}
+.target-desc{
+  font-size:13px;
+  margin-top:4px;
+  color:rgba(255,255,255,.6);
+  line-height:1.4;
+}
+.match-meter{
+  margin-top:10px;
+  height:6px;
+  background:rgba(255,255,255,.1);
+  border-radius:3px;
+  overflow:hidden;
+  position:relative;
+}
+.match-fill{
+  height:100%;
+  background: linear-gradient(90deg, var(--neon-pink), var(--neon-yellow), var(--neon-cyan));
+  width:0%;
+  transition: width .12s ease;
+  border-radius:3px;
+}
+.target-timer{
+  flex:0 0 auto;
+  font-family:'Bebas Neue', sans-serif;
+  font-size:48px;
+  line-height:1;
+  width:60px;
+  text-align:center;
+  color:var(--neon-yellow);
+  text-shadow: 0 0 16px rgba(255,242,0,.6);
+}
+
+/* Floating feedback */
+.feedback{
+  position:absolute;
+  top:42%; left:50%;
+  transform:translate(-50%, -50%) scale(0);
+  font-family:'Bebas Neue', sans-serif;
+  font-size:80px;
+  letter-spacing:.04em;
+  pointer-events:none;
+  z-index:6;
+  opacity:0;
+}
+.feedback.show{
+  animation: feedbackPop .8s cubic-bezier(.18,1.2,.4,1) forwards;
+}
+@keyframes feedbackPop{
+  0%{transform:translate(-50%, -50%) scale(0) rotate(-8deg); opacity:0;}
+  20%{transform:translate(-50%, -50%) scale(1.15) rotate(2deg); opacity:1;}
+  60%{transform:translate(-50%, -50%) scale(1) rotate(-1deg); opacity:1;}
+  100%{transform:translate(-50%, -50%) scale(1.05) rotate(0); opacity:0;}
+}
+.feedback.perfect{ color:var(--neon-yellow); text-shadow: 0 0 30px var(--neon-yellow), 0 0 60px var(--neon-pink); }
+.feedback.great{ color:var(--neon-cyan); text-shadow: 0 0 24px var(--neon-cyan); }
+.feedback.good{ color:var(--neon-pink); text-shadow: 0 0 20px var(--neon-pink); }
+.feedback.miss{ color:#888; text-shadow: 0 0 12px rgba(255,255,255,.3); }
+
+/* Countdown */
+.countdown{
+  position:absolute;
+  inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue', sans-serif;
+  font-size:200px;
+  color:#fff;
+  z-index:7;
+  pointer-events:none;
+  opacity:0;
+}
+.countdown.show{
+  animation: countdownPulse .9s ease-out forwards;
+}
+@keyframes countdownPulse{
+  0%{opacity:0; transform:scale(2);}
+  30%{opacity:1; transform:scale(1);}
+  100%{opacity:0; transform:scale(.8);}
+}
+
+/* Status / loading */
+.status-pill{
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  background:rgba(10,0,20,.85);
+  border:1px solid rgba(0,245,255,.4);
+  padding:18px 28px;
+  border-radius:999px;
+  font-family:'Major Mono Display', monospace;
+  font-size:12px;
+  letter-spacing:.2em;
+  color:var(--neon-cyan);
+  z-index:8;
+  display:flex; align-items:center; gap:12px;
+}
+.spinner{
+  width:14px; height:14px;
+  border:2px solid rgba(0,245,255,.2);
+  border-top-color:var(--neon-cyan);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+/* === RESULT SCREEN === */
+#result-screen .result-title{
+  font-family:'Bebas Neue', sans-serif;
+  font-size:44px;
+  letter-spacing:.08em;
+  background: var(--grad);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.result-score{
+  font-family:'Bebas Neue', sans-serif;
+  font-size:120px;
+  line-height:1;
+  margin:24px 0;
+  text-shadow: 0 0 40px var(--neon-pink);
+}
+.rank-badge{
+  font-family:'Bebas Neue', sans-serif;
+  font-size:80px;
+  padding:16px 48px;
+  border:3px solid currentColor;
+  border-radius:24px;
+  letter-spacing:.1em;
+}
+.rank-S{ color:var(--neon-yellow); box-shadow: 0 0 40px rgba(255,242,0,.4); }
+.rank-A{ color:var(--neon-pink); box-shadow: 0 0 30px rgba(255,42,157,.4); }
+.rank-B{ color:var(--neon-cyan); box-shadow: 0 0 20px rgba(0,245,255,.4); }
+.rank-C{ color:var(--neon-purple); }
+.rank-D{ color:#888; }
+
+.stats{
+  margin-top:32px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:16px;
+  width:100%; max-width:320px;
+}
+.stat{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;
+  padding:14px;
+  text-align:center;
+}
+.stat-label{
+  font-size:11px;
+  letter-spacing:.2em;
+  color:rgba(255,255,255,.5);
+  text-transform:uppercase;
+}
+.stat-val{
+  font-family:'Bebas Neue', sans-serif;
+  font-size:32px;
+  line-height:1;
+  margin-top:4px;
+}
+
+/* Error */
+.err-msg{
+  background:rgba(255,42,157,.1);
+  border:1px solid var(--neon-pink);
+  color:var(--neon-pink);
+  padding:14px 20px;
+  border-radius:12px;
+  margin-top:20px;
+  text-align:center;
+  font-size:14px;
+  max-width:320px;
+}
+
+/* Hide scrollbars */
+::-webkit-scrollbar{ display:none; }
+
+/* === Position Guide === */
+.position-guide{
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%, -50%);
+  background: rgba(10,0,20,.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border:2px solid var(--neon-yellow);
+  border-radius:20px;
+  padding:18px 28px;
+  font-family:'Bebas Neue', sans-serif;
+  font-size:24px;
+  letter-spacing:.06em;
+  color:var(--neon-yellow);
+  text-align:center;
+  z-index:6;
+  pointer-events:none;
+  opacity:0;
+  transition: opacity .3s ease;
+  box-shadow: 0 0 40px rgba(255,242,0,.25);
+  max-width: 80%;
+}
+.position-guide.show{ opacity:1; }
+.position-guide .icon{
+  font-size:36px;
+  margin-bottom:6px;
+}
+.position-guide .hint{
+  font-family:'Rajdhani', sans-serif;
+  font-size:13px;
+  letter-spacing:normal;
+  color: rgba(255,255,255,.7);
+  margin-top:6px;
+  font-weight:500;
+}
+
+/* Framing guide overlay - shown only on intro */
+.frame-guide{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:4;
+  opacity:0;
+  transition: opacity .4s ease;
+}
+.frame-guide.show{ opacity:1; }
+.frame-guide svg{
+  width:100%; height:100%;
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- ============ START SCREEN ============ -->
+<div class="screen active" id="start-screen">
+  <div class="subtitle">▸ MOTION RHYTHM ◂</div>
+  <h1 class="title">NEON<br>DANCE</h1>
+  <p class="desc">
+    화면에 표시되는 포즈를 따라하세요.<br>
+    카메라가 당신의 움직임을 인식해<br>
+    실시간으로 점수를 계산합니다.
+  </p>
+  <div style="margin-top:24px; padding:16px 20px; border:1px solid rgba(0,245,255,.3); border-radius:14px; background:rgba(0,245,255,.05); max-width:320px;">
+    <div style="font-family:&#39;Bebas Neue&#39;,sans-serif; font-size:18px; color:var(--neon-cyan); letter-spacing:.1em; margin-bottom:8px;">▸ PLAY TIPS</div>
+    <div style="font-size:13px; line-height:1.7; color:rgba(255,255,255,.75); text-align:left;">
+      📱 카메라를 세로로 거치<br>
+      📏 카메라에서 <b style="color:var(--neon-yellow)">약 2m</b> 거리<br>
+      🌟 머리 ~ 무릎이 화면에 들어오게<br>
+      💡 밝은 곳에서 단색 배경 추천
+    </div>
+  </div>
+  <button class="btn" id="start-btn">START</button>
+  <div class="start-hint">카메라 권한이 필요합니다</div>
+  <div class="err-msg" id="err-msg" style="display:none;"></div>
+</div>
+
+<!-- ============ GAME SCREEN ============ -->
+<div class="screen" id="game-screen">
+  <div class="video-wrap">
+    <video id="video" playsinline="" muted="" webkit-playsinline=""></video>
+    <canvas id="output-canvas"></canvas>
+  </div>
+  <div class="video-overlay"></div>
+
+  <!-- Framing guide (인체 실루엣 가이드) -->
+  <div class="frame-guide" id="frame-guide">
+    <svg viewBox="0 0 100 180" preserveAspectRatio="xMidYMid meet">
+      <!-- 권장 위치 실루엣: 머리~무릎이 들어오는 영역을 표시 -->
+      <ellipse cx="50" cy="90" rx="28" ry="78" fill="none" stroke="rgba(0,245,255,.35)" stroke-width=".6" stroke-dasharray="2,1.5"></ellipse>
+      <!-- 머리 위치 표시 -->
+      <circle cx="50" cy="32" r="9" fill="none" stroke="rgba(0,245,255,.4)" stroke-width=".6" stroke-dasharray="1.5,1"></circle>
+    </svg>
+  </div>
+
+  <!-- 위치/거리 안내 -->
+  <div class="position-guide" id="position-guide">
+    <div class="icon" id="pg-icon">📏</div>
+    <div id="pg-text">한 발 뒤로!</div>
+    <div class="hint" id="pg-hint">전신이 화면에 들어오게</div>
+  </div>
+
+  <div class="status-pill" id="status-pill">
+    <div class="spinner"></div>
+    <span id="status-text">CAMERA INIT</span>
+  </div>
+
+  <div class="hud-top">
+    <div class="score-box">
+      <div class="score-label">SCORE</div>
+      <div class="score-val" id="score-val">0</div>
+    </div>
+    <div class="combo-box">
+      <div class="combo-label">COMBO</div>
+      <div class="combo-val" id="combo-val">×0</div>
+    </div>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+
+  <div class="countdown" id="countdown"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <div class="target-card" id="target-card" style="display:none;">
+    <svg class="target-svg" id="target-svg" viewBox="0 0 100 120"></svg>
+    <div class="target-info">
+      <div class="target-name" id="target-name">T-POSE</div>
+      <div class="target-desc" id="target-desc">팔을 양옆으로 펴세요</div>
+      <div class="match-meter">
+        <div class="match-fill" id="match-fill"></div>
+      </div>
+    </div>
+    <div class="target-timer" id="target-timer">3</div>
+  </div>
+</div>
+
+<!-- ============ RESULT SCREEN ============ -->
+<div class="screen" id="result-screen">
+  <div class="result-title">FINAL SCORE</div>
+  <div class="result-score" id="final-score">0</div>
+  <div class="rank-badge rank-A" id="rank-badge">A</div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Perfect</div>
+      <div class="stat-val" id="stat-perfect" style="color:var(--neon-yellow);">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Great</div>
+      <div class="stat-val" id="stat-great" style="color:var(--neon-cyan);">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Good</div>
+      <div class="stat-val" id="stat-good" style="color:var(--neon-pink);">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Miss</div>
+      <div class="stat-val" id="stat-miss" style="color:#888;">0</div>
+    </div>
+  </div>
+  <button class="btn" id="retry-btn">RETRY</button>
+</div>
+
+<script>
+/* =========================================================
+   NEON DANCE — Motion Recognition Game
+   ========================================================= */
+
+// ----- SVG helpers for target pose visualization -----
+// viewBox 100x120. Standard anchors:
+//   head(50,22) shoulders L(38,40) R(62,40) hips L(40,80) R(60,80)
+const _BODY = '#00f5ff', _ARM = '#ff2a9d', _HOT = '#fff200';
+const _ln = (x1,y1,x2,y2,c=_BODY) =>
+  `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+const _dot = (x,y,r=3,c=_HOT) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`;
+const _txt = (x,y,t,c=_HOT,sz=8) =>
+  `<text x="${x}" y="${y}" fill="${c}" font-size="${sz}" font-family="'Bebas Neue',sans-serif" letter-spacing="1">${t}</text>`;
+
+function _figure(arms, legsOverride){
+  const head = `<circle cx="50" cy="22" r="8" stroke="${_BODY}" stroke-width="3" fill="none"/>`;
+  const body = _ln(50, 30, 50, 78);
+  const sBar = _ln(38, 40, 62, 40);
+  const hBar = _ln(40, 80, 60, 80);
+  const legs = legsOverride || (_ln(40,80,40,115) + _ln(60,80,60,115));
+  return head + body + sBar + hBar + legs + arms;
+}
+
+// ----- MediaPipe pose landmark indices -----
+const LM = {
+  NOSE:0,
+  L_SHOULDER:11, R_SHOULDER:12,
+  L_ELBOW:13,    R_ELBOW:14,
+  L_WRIST:15,    R_WRIST:16,
+  L_HIP:23,      R_HIP:24,
+  L_KNEE:25,     R_KNEE:26,
+  L_ANKLE:27,    R_ANKLE:28
+};
+
+// ----- Target pose definitions (3D feature-based) -----
+//
+// Each pose specifies "features" - measured values to match. Possible features:
+//   Joint angles (3D, degrees):
+//     L_elbow, R_elbow, L_shoulder, R_shoulder, L_knee, R_knee
+//   Forward direction (meters, positive = wrist closer to camera):
+//     L_arm_fwd, R_arm_fwd
+//   Distances (in shoulder-widths):
+//     wrists_dist, L_wrist_face, R_wrist_face, L_wrist_hip, R_wrist_hip
+//   Vertical position (in shoulder-widths, negative = above shoulder):
+//     L_wrist_y, R_wrist_y
+//
+// Each feature: { target: <value>, tol: <full-score tolerance> }
+const TARGET_POSES = [
+  // ===== Side poses =====
+  {
+    name: 'T-POSE',
+    desc: '양팔을 수평으로 쫙 펴세요',
+    duration: 4000,
+    features: {
+      L_elbow:    { target: 175, tol: 30 },
+      R_elbow:    { target: 175, tol: 30 },
+      L_shoulder: { target: 90,  tol: 25 },
+      R_shoulder: { target: 90,  tol: 25 },
+      L_arm_fwd:  { target: 0,   tol: 0.30 },
+      R_arm_fwd:  { target: 0,   tol: 0.30 }
+    },
+    svg: _figure(_ln(38,40,10,40,_ARM) + _ln(62,40,90,40,_ARM))
+  },
+  {
+    name: 'Y-POSE',
+    desc: '양팔을 V자로 위로',
+    duration: 4000,
+    features: {
+      L_elbow:    { target: 175, tol: 30 },
+      R_elbow:    { target: 175, tol: 30 },
+      L_wrist_y:  { target: -1.4, tol: 0.7 },
+      R_wrist_y:  { target: -1.4, tol: 0.7 },
+      wrists_dist:{ target: 2.6, tol: 1.2 }
+    },
+    svg: _figure(_ln(38,40,22,18,_ARM) + _ln(62,40,78,18,_ARM))
+  },
+  {
+    name: 'POWER UP',
+    desc: '두 손을 머리 위로 곧게',
+    duration: 4000,
+    features: {
+      L_elbow:    { target: 175, tol: 25 },
+      R_elbow:    { target: 175, tol: 25 },
+      L_wrist_y:  { target: -2.0, tol: 0.6 },
+      R_wrist_y:  { target: -2.0, tol: 0.6 }
+    },
+    svg: _figure(_ln(38,40,40,8,_ARM) + _ln(62,40,60,8,_ARM))
+  },
+  {
+    name: 'LEFT HIGH',
+    desc: '왼손만 하늘 높이!',
+    duration: 4000,
+    features: {
+      L_elbow:    { target: 175, tol: 25 },
+      L_wrist_y:  { target: -1.8, tol: 0.6 },
+      R_shoulder: { target: 25,  tol: 30 },
+      R_elbow:    { target: 165, tol: 35 }
+    },
+    svg: _figure(_ln(38,40,32,8,_ARM) + _ln(62,40,65,60) + _ln(65,60,65,78))
+  },
+  {
+    name: 'RIGHT HIGH',
+    desc: '오른손만 하늘 높이!',
+    duration: 4000,
+    features: {
+      R_elbow:    { target: 175, tol: 25 },
+      R_wrist_y:  { target: -1.8, tol: 0.6 },
+      L_shoulder: { target: 25,  tol: 30 },
+      L_elbow:    { target: 165, tol: 35 }
+    },
+    svg: _figure(_ln(38,40,35,60) + _ln(35,60,35,78) + _ln(62,40,68,8,_ARM))
+  },
+
+  // ===== FORWARD-FACING POSES (NEW, requires 3D) =====
+  {
+    name: 'PRAYER',
+    desc: '두 손을 가슴 앞에 모으기 🙏',
+    duration: 4000,
+    features: {
+      wrists_dist: { target: 0.3, tol: 0.6 },
+      L_wrist_y:   { target: -0.3, tol: 0.6 },
+      R_wrist_y:   { target: -0.3, tol: 0.6 },
+      L_arm_fwd:   { target: 0.20, tol: 0.20 },
+      R_arm_fwd:   { target: 0.20, tol: 0.20 },
+      L_elbow:     { target: 80, tol: 35 },
+      R_elbow:     { target: 80, tol: 35 }
+    },
+    svg: _figure(
+      _ln(38,40,42,55,_ARM) + _ln(42,55,50,52,_ARM) +
+      _ln(62,40,58,55,_ARM) + _ln(58,55,50,52,_ARM) +
+      _dot(50,52,4,_HOT)
+    )
+  },
+  {
+    name: 'PUNCH R',
+    desc: '오른팔로 카메라 향해 펀치 🥊',
+    duration: 4000,
+    features: {
+      R_elbow:     { target: 175, tol: 25 },
+      R_arm_fwd:   { target: 0.45, tol: 0.25 },
+      R_wrist_y:   { target: -0.2, tol: 0.5 },
+      L_elbow:     { target: 70, tol: 35 },
+      L_wrist_face:{ target: 1.2, tol: 0.7 }
+    },
+    svg: _figure(
+      _ln(38,40,36,32,_ARM) + _ln(36,32,44,28,_ARM) + _dot(44,28,3,_ARM) +
+      _ln(62,40,72,42,_ARM) + _ln(72,42,82,44,_ARM) + _dot(85,44,6,_HOT) +
+      _txt(70,62,'→ FRONT')
+    )
+  },
+  {
+    name: 'PUNCH L',
+    desc: '왼팔로 카메라 향해 펀치 🥊',
+    duration: 4000,
+    features: {
+      L_elbow:     { target: 175, tol: 25 },
+      L_arm_fwd:   { target: 0.45, tol: 0.25 },
+      L_wrist_y:   { target: -0.2, tol: 0.5 },
+      R_elbow:     { target: 70, tol: 35 },
+      R_wrist_face:{ target: 1.2, tol: 0.7 }
+    },
+    svg: _figure(
+      _ln(62,40,64,32,_ARM) + _ln(64,32,56,28,_ARM) + _dot(56,28,3,_ARM) +
+      _ln(38,40,28,42,_ARM) + _ln(28,42,18,44,_ARM) + _dot(15,44,6,_HOT) +
+      _txt(2,62,'FRONT ←')
+    )
+  },
+  {
+    name: 'GUARD',
+    desc: '두 주먹을 얼굴 앞에! 가드 🛡️',
+    duration: 4000,
+    features: {
+      L_elbow:     { target: 65, tol: 30 },
+      R_elbow:     { target: 65, tol: 30 },
+      L_arm_fwd:   { target: 0.20, tol: 0.20 },
+      R_arm_fwd:   { target: 0.20, tol: 0.20 },
+      L_wrist_face:{ target: 0.7, tol: 0.6 },
+      R_wrist_face:{ target: 0.7, tol: 0.6 },
+      wrists_dist: { target: 0.8, tol: 0.5 }
+    },
+    svg: _figure(
+      _ln(38,40,40,30,_ARM) + _ln(40,30,46,26,_ARM) + _dot(46,26,4,_HOT) +
+      _ln(62,40,60,30,_ARM) + _ln(60,30,54,26,_ARM) + _dot(54,26,4,_HOT)
+    )
+  },
+  {
+    name: 'HEART',
+    desc: '머리 위에 양손으로 하트 ❤️',
+    duration: 4000,
+    features: {
+      wrists_dist: { target: 0.5, tol: 0.7 },
+      L_wrist_y:   { target: -1.6, tol: 0.6 },
+      R_wrist_y:   { target: -1.6, tol: 0.6 },
+      L_elbow:     { target: 110, tol: 40 },
+      R_elbow:     { target: 110, tol: 40 }
+    },
+    svg: _figure(
+      _ln(38,40,33,18,_ARM) + _ln(33,18,46,8,_ARM) +
+      _ln(62,40,67,18,_ARM) + _ln(67,18,54,8,_ARM)
+    ) + `<path d="M50 9 q-4 -3 -7 0 q0 4 7 8 q7 -4 7 -8 q-3 -3 -7 0 z" fill="${_HOT}"/>`
+  },
+  {
+    name: 'HANDS HIPS',
+    desc: '양손을 허리에 척! 🤜🤛',
+    duration: 4000,
+    features: {
+      L_wrist_hip: { target: 0.4, tol: 0.5 },
+      R_wrist_hip: { target: 0.4, tol: 0.5 },
+      L_elbow:     { target: 80, tol: 35 },
+      R_elbow:     { target: 80, tol: 35 }
+    },
+    svg: _figure(
+      _ln(38,40,33,58,_ARM) + _ln(33,58,42,76,_ARM) + _dot(42,76,3,_HOT) +
+      _ln(62,40,67,58,_ARM) + _ln(67,58,58,76,_ARM) + _dot(58,76,3,_HOT)
+    )
+  },
+  {
+    name: 'CROSS ARMS',
+    desc: '가슴 앞에서 팔짱 X자',
+    duration: 4000,
+    features: {
+      L_arm_fwd:   { target: 0.18, tol: 0.20 },
+      R_arm_fwd:   { target: 0.18, tol: 0.20 },
+      L_wrist_y:   { target: -0.2, tol: 0.4 },
+      R_wrist_y:   { target: -0.2, tol: 0.4 },
+      L_elbow:     { target: 50, tol: 30 },
+      R_elbow:     { target: 50, tol: 30 },
+      wrists_dist: { target: 1.4, tol: 0.7 }
+    },
+    svg: _figure(
+      _ln(38,40,42,55,_ARM) + _ln(42,55,62,50,_ARM) + _dot(62,50,3,_HOT) +
+      _ln(62,40,58,55,_ARM) + _ln(58,55,38,50,_ARM) + _dot(38,50,3,_HOT)
+    )
+  },
+  {
+    name: 'POINT YOU',
+    desc: '오른손으로 카메라 가리키기 👉',
+    duration: 4000,
+    features: {
+      R_elbow:     { target: 170, tol: 30 },
+      R_arm_fwd:   { target: 0.50, tol: 0.25 },
+      R_wrist_y:   { target: 0,   tol: 0.6 },
+      L_shoulder:  { target: 20,  tol: 25 },
+      L_elbow:     { target: 165, tol: 35 }
+    },
+    svg: _figure(
+      _ln(38,40,35,60) + _ln(35,60,35,78) +
+      _ln(62,40,72,46,_ARM) + _ln(72,46,84,52,_ARM) + _dot(86,52,5,_HOT) +
+      _txt(68,68,'→ YOU')
+    )
+  }
+];
+
+// ----- Game state -----
+const state = {
+  score: 0,
+  combo: 0,
+  maxCombo: 0,
+  poseIdx: 0,
+  poseStart: 0,
+  poseHits: { perfect:0, great:0, good:0, miss:0 },
+  bestMatchInRound: 0,
+  scored: false,
+  running: false,
+  latestLandmarks: null,        // 2D normalized (for drawing & framing)
+  latestWorldLandmarks: null,   // 3D in meters, hip-centered (for pose matching)
+  poseQueue: []
+};
+
+// ----- DOM refs -----
+const $ = id => document.getElementById(id);
+const screens = {
+  start:  $('start-screen'),
+  game:   $('game-screen'),
+  result: $('result-screen')
+};
+
+function showScreen(name){
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+
+function setStatus(text){
+  $('status-text').textContent = text;
+  $('status-pill').style.display = 'flex';
+}
+function hideStatus(){ $('status-pill').style.display = 'none'; }
+
+/* ---------- Geometry helpers ---------- */
+
+// 2D angle (used for old code paths if needed)
+function angleDeg(a, b, c){
+  const v1x = a.x - b.x, v1y = a.y - b.y;
+  const v2x = c.x - b.x, v2y = c.y - b.y;
+  const dot = v1x*v2x + v1y*v2y;
+  const m1 = Math.hypot(v1x, v1y);
+  const m2 = Math.hypot(v2x, v2y);
+  if (m1 === 0 || m2 === 0) return 0;
+  let cos = dot / (m1*m2);
+  cos = Math.max(-1, Math.min(1, cos));
+  return Math.acos(cos) * 180 / Math.PI;
+}
+
+// 3D angle at vertex b (a-b-c) in degrees
+function angle3D(a, b, c){
+  const v1x = a.x-b.x, v1y = a.y-b.y, v1z = a.z-b.z;
+  const v2x = c.x-b.x, v2y = c.y-b.y, v2z = c.z-b.z;
+  const dot = v1x*v2x + v1y*v2y + v1z*v2z;
+  const m1 = Math.sqrt(v1x*v1x + v1y*v1y + v1z*v1z);
+  const m2 = Math.sqrt(v2x*v2x + v2y*v2y + v2z*v2z);
+  if (m1 === 0 || m2 === 0) return 0;
+  let cos = dot / (m1*m2);
+  cos = Math.max(-1, Math.min(1, cos));
+  return Math.acos(cos) * 180 / Math.PI;
+}
+
+function dist3D(a, b){
+  const dx = a.x-b.x, dy = a.y-b.y, dz = a.z-b.z;
+  return Math.sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+function lmVisible(l, threshold = 0.3){
+  return l && l.visibility != null && l.visibility >= threshold;
+}
+
+/* ---------- Pose feature extraction ---------- */
+
+// Extract a feature dictionary from world landmarks (3D, in meters).
+// Returns null if upper body not visible enough.
+function computeFeatures(world, lms){
+  if (!world || !lms) return null;
+
+  // Need core upper-body visible
+  const need = [LM.L_SHOULDER, LM.R_SHOULDER, LM.L_HIP, LM.R_HIP,
+                LM.L_ELBOW, LM.R_ELBOW, LM.L_WRIST, LM.R_WRIST];
+  if (!need.every(i => lmVisible(lms[i]))) return null;
+
+  const ls = world[LM.L_SHOULDER], rs = world[LM.R_SHOULDER];
+  const lh = world[LM.L_HIP],      rh = world[LM.R_HIP];
+  const le = world[LM.L_ELBOW],    re = world[LM.R_ELBOW];
+  const lw = world[LM.L_WRIST],    rw = world[LM.R_WRIST];
+  const nose = world[LM.NOSE];
+
+  // Scale: shoulder width in meters (~0.35-0.45 typical)
+  const sw = dist3D(ls, rs);
+  if (sw < 0.05) return null;
+
+  const f = {
+    // 3D joint angles
+    L_elbow:    angle3D(ls, le, lw),
+    R_elbow:    angle3D(rs, re, rw),
+    L_shoulder: angle3D(lh, ls, le),
+    R_shoulder: angle3D(rh, rs, re),
+
+    // Forward direction (positive = wrist closer to camera than shoulder)
+    // MediaPipe convention: smaller z = closer to camera, so we negate the diff
+    L_arm_fwd: ls.z - lw.z,
+    R_arm_fwd: rs.z - rw.z,
+
+    // Distances normalized by shoulder width (scale-invariant)
+    wrists_dist: dist3D(lw, rw) / sw,
+    L_wrist_hip: dist3D(lw, lh) / sw,
+    R_wrist_hip: dist3D(rw, rh) / sw,
+
+    // Vertical position relative to shoulder (negative = above shoulder)
+    // y axis: smaller value = higher in image
+    L_wrist_y: (lw.y - ls.y) / sw,
+    R_wrist_y: (rw.y - rs.y) / sw
+  };
+
+  // Optional features (only if face landmark visible)
+  if (lmVisible(lms[LM.NOSE])){
+    f.L_wrist_face = dist3D(lw, nose) / sw;
+    f.R_wrist_face = dist3D(rw, nose) / sw;
+  }
+
+  return f;
+}
+
+/* ---------- Pose scoring (feature-based) ---------- */
+
+function scorePose(world, lms, target){
+  const f = computeFeatures(world, lms);
+  if (!f) return 0;
+
+  let total = 0, count = 0;
+  for (const key in target.features){
+    const spec = target.features[key];
+    const actual = f[key];
+    count++;
+    if (actual == null){
+      // Required feature unavailable — count as zero
+      continue;
+    }
+    const diff = Math.abs(spec.target - actual);
+    const s = Math.max(0, 1 - diff / spec.tol);
+    total += s;
+  }
+  return count > 0 ? Math.round((total / count) * 100) : 0;
+}
+
+/* ---------- Drawing ---------- */
+
+const canvas = $('output-canvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){
+  const v = $('video');
+  const w = v.videoWidth || window.innerWidth;
+  const h = v.videoHeight || window.innerHeight;
+  canvas.width = w;
+  canvas.height = h;
+}
+
+const POSE_CONNECTIONS = [
+  [11,12],[11,13],[13,15],[12,14],[14,16],
+  [11,23],[12,24],[23,24],
+  [23,25],[25,27],[24,26],[26,28]
+];
+
+function drawPose(landmarks){
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  // glow connections
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(0, 245, 255, 0.25)';
+  ctx.shadowColor = '#00f5ff';
+  ctx.shadowBlur = 18;
+  for (const [a,b] of POSE_CONNECTIONS){
+    const la = landmarks[a], lb = landmarks[b];
+    if (!lmVisible(la) || !lmVisible(lb)) continue;
+    ctx.beginPath();
+    ctx.moveTo(la.x*w, la.y*h);
+    ctx.lineTo(lb.x*w, lb.y*h);
+    ctx.stroke();
+  }
+
+  // crisp lines
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#00f5ff';
+  for (const [a,b] of POSE_CONNECTIONS){
+    const la = landmarks[a], lb = landmarks[b];
+    if (!lmVisible(la) || !lmVisible(lb)) continue;
+    ctx.beginPath();
+    ctx.moveTo(la.x*w, la.y*h);
+    ctx.lineTo(lb.x*w, lb.y*h);
+    ctx.stroke();
+  }
+
+  // joints
+  ctx.fillStyle = '#ff2a9d';
+  ctx.shadowColor = '#ff2a9d';
+  ctx.shadowBlur = 12;
+  const jointPts = [11,12,13,14,15,16,23,24,25,26,27,28];
+  for (const i of jointPts){
+    const l = landmarks[i];
+    if (!lmVisible(l)) continue;
+    ctx.beginPath();
+    ctx.arc(l.x*w, l.y*h, 6, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+}
+
+/* ---------- Target stick figure SVG ---------- */
+
+function renderTargetSvg(target){
+  // Each pose carries its own pre-built SVG content (target.svg).
+  $('target-svg').innerHTML = target.svg || '';
+}
+
+/* ---------- Game flow ---------- */
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showFeedback(text, klass){
+  const fb = $('feedback');
+  fb.textContent = text;
+  fb.className = 'feedback';
+  // restart animation
+  void fb.offsetWidth;
+  fb.classList.add('show', klass);
+}
+
+function showCountdown(text){
+  return new Promise(resolve => {
+    const cd = $('countdown');
+    cd.textContent = text;
+    cd.classList.remove('show');
+    void cd.offsetWidth;
+    cd.classList.add('show');
+    setTimeout(resolve, 900);
+  });
+}
+
+async function startRound(){
+  state.score = 0;
+  state.combo = 0;
+  state.maxCombo = 0;
+  state.poseHits = { perfect:0, great:0, good:0, miss:0 };
+  state.poseIdx = 0;
+  state.poseQueue = shuffle(TARGET_POSES).slice(0, 8); // 8 poses per round (mix of side & forward poses)
+  $('score-val').textContent = '0';
+  $('combo-val').textContent = '×0';
+  $('progress-fill').style.width = '0%';
+
+  await showCountdown('3');
+  await showCountdown('2');
+  await showCountdown('1');
+  await showCountdown('GO!');
+
+  state.running = true;
+  loadPose(0);
+}
+
+function loadPose(idx){
+  if (idx >= state.poseQueue.length){
+    finishRound();
+    return;
+  }
+  const target = state.poseQueue[idx];
+  state.poseIdx = idx;
+  state.poseStart = performance.now();
+  state.bestMatchInRound = 0;
+  state.scored = false;
+
+  $('target-card').style.display = 'flex';
+  $('target-name').textContent = target.name;
+  $('target-desc').textContent = target.desc;
+  $('match-fill').style.width = '0%';
+  renderTargetSvg(target);
+}
+
+function finishRound(){
+  state.running = false;
+  $('target-card').style.display = 'none';
+  $('progress-fill').style.width = '100%';
+
+  const total = state.poseQueue.length;
+  const maxScore = total * 100;
+  const norm = Math.min(100, Math.round((state.score / maxScore) * 100));
+
+  $('final-score').textContent = state.score;
+  $('stat-perfect').textContent = state.poseHits.perfect;
+  $('stat-great').textContent = state.poseHits.great;
+  $('stat-good').textContent = state.poseHits.good;
+  $('stat-miss').textContent = state.poseHits.miss;
+
+  let rank = 'D', cls = 'rank-D';
+  if (norm >= 90){ rank='S'; cls='rank-S'; }
+  else if (norm >= 75){ rank='A'; cls='rank-A'; }
+  else if (norm >= 55){ rank='B'; cls='rank-B'; }
+  else if (norm >= 35){ rank='C'; cls='rank-C'; }
+  const badge = $('rank-badge');
+  badge.textContent = rank;
+  badge.className = 'rank-badge ' + cls;
+
+  showScreen('result');
+}
+
+function tickGame(now){
+  if (!state.running) return;
+  const target = state.poseQueue[state.poseIdx];
+  const elapsed = now - state.poseStart;
+  const remain = target.duration - elapsed;
+
+  // Live match score (best so far in this round)
+  if (state.latestLandmarks){
+    const inst = scorePose(state.latestWorldLandmarks, state.latestLandmarks, target);
+    if (inst > state.bestMatchInRound) state.bestMatchInRound = inst;
+    $('match-fill').style.width = inst + '%';
+  }
+
+  // timer
+  $('target-timer').textContent = Math.max(0, Math.ceil(remain/1000));
+
+  // overall progress
+  const overall = ((state.poseIdx + Math.min(1, elapsed/target.duration)) / state.poseQueue.length) * 100;
+  $('progress-fill').style.width = overall + '%';
+
+  if (remain <= 0 && !state.scored){
+    state.scored = true;
+    const best = state.bestMatchInRound;
+    let label = 'MISS', klass = 'miss', bucket = 'miss';
+    if (best >= 85){ label='PERFECT!'; klass='perfect'; bucket='perfect'; }
+    else if (best >= 65){ label='GREAT!'; klass='great'; bucket='great'; }
+    else if (best >= 40){ label='GOOD'; klass='good'; bucket='good'; }
+    state.poseHits[bucket]++;
+
+    if (bucket === 'miss'){
+      state.combo = 0;
+    } else {
+      state.combo++;
+      if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+    }
+    const comboBonus = 1 + Math.min(state.combo, 10) * 0.05;
+    state.score += Math.round(best * comboBonus);
+
+    $('score-val').textContent = state.score;
+    $('combo-val').textContent = '×' + state.combo;
+    showFeedback(label, klass);
+
+    setTimeout(() => loadPose(state.poseIdx + 1), 700);
+  }
+}
+
+/* ---------- MediaPipe setup ---------- */
+
+let pose;
+let frameProcessing = false;
+
+function onResults(results){
+  if (!canvas.width || canvas.width !== results.image.width){
+    resizeCanvas();
+  }
+  if (results.poseLandmarks){
+    state.latestLandmarks = results.poseLandmarks;
+    state.latestWorldLandmarks = results.poseWorldLandmarks || null;
+    drawPose(results.poseLandmarks);
+    updatePositionGuide(results.poseLandmarks);
+  } else {
+    state.latestLandmarks = null;
+    state.latestWorldLandmarks = null;
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    showPositionGuide('🔍', '몸이 안 보여요', '카메라 앞에 서주세요');
+  }
+  hideStatus();
+}
+
+/* ---------- Position / Distance Guide ---------- */
+
+const positionState = { lastShown: 0, current: null };
+
+function showPositionGuide(icon, text, hint){
+  const el = $('position-guide');
+  const key = icon + text;
+  if (positionState.current !== key){
+    $('pg-icon').textContent = icon;
+    $('pg-text').textContent = text;
+    $('pg-hint').textContent = hint || '';
+    positionState.current = key;
+  }
+  el.classList.add('show');
+  positionState.lastShown = performance.now();
+}
+
+function hidePositionGuide(){
+  $('position-guide').classList.remove('show');
+  $('frame-guide').classList.remove('show');
+  positionState.current = null;
+}
+
+function updatePositionGuide(lms){
+  const lShoulder = lms[LM.L_SHOULDER];
+  const rShoulder = lms[LM.R_SHOULDER];
+  const lHip = lms[LM.L_HIP];
+  const rHip = lms[LM.R_HIP];
+  const nose = lms[LM.NOSE];
+  const lWrist = lms[LM.L_WRIST];
+  const rWrist = lms[LM.R_WRIST];
+
+  // 1) 상반신 핵심 부위가 안 보이면 → 카메라 앞으로 들어와야 함
+  if (!lmVisible(lShoulder) || !lmVisible(rShoulder) || !lmVisible(lHip) || !lmVisible(rHip)){
+    showPositionGuide('👤', '전신이 보이게', '머리부터 골반까지 화면에 들어와야 해요');
+    $('frame-guide').classList.add('show');
+    return;
+  }
+
+  // 2) 어깨 너비로 거리 판정 (정규화 좌표 0~1 기준)
+  // 너무 가까움: 어깨 너비가 화면의 50% 이상 → 뒤로 가라
+  // 적절: 어깨 너비 18% ~ 40%
+  // 너무 멀음: 18% 미만 → 앞으로 와라
+  const shoulderW = Math.abs(lShoulder.x - rShoulder.x);
+
+  if (shoulderW > 0.50){
+    showPositionGuide('⬅️', '한 발 뒤로!', '카메라에서 약 2m 떨어져주세요');
+    $('frame-guide').classList.add('show');
+    return;
+  }
+  if (shoulderW < 0.13){
+    showPositionGuide('➡️', '조금 더 가까이', '카메라 앞 약 2m 거리가 좋아요');
+    $('frame-guide').classList.add('show');
+    return;
+  }
+
+  // 3) 화면 밖으로 손이 나갔는지 (양팔 벌리기 자세 대비)
+  const margin = 0.03;
+  const handsOut =
+    (lmVisible(lWrist) && (lWrist.x < margin || lWrist.x > 1-margin || lWrist.y < margin)) ||
+    (lmVisible(rWrist) && (rWrist.x < margin || rWrist.x > 1-margin || rWrist.y < margin));
+  if (handsOut){
+    showPositionGuide('🙌', '손이 화면 밖!', '한 발 더 뒤로 가서 팔을 펴보세요');
+    $('frame-guide').classList.add('show');
+    return;
+  }
+
+  // 4) 머리가 너무 위/아래로 치우쳤는지
+  if (lmVisible(nose)){
+    if (nose.y < 0.05){
+      showPositionGuide('⬇️', '카메라를 위로', '머리가 잘리고 있어요');
+      $('frame-guide').classList.add('show');
+      return;
+    }
+    if (nose.y > 0.55){
+      showPositionGuide('⬆️', '카메라를 내려', '머리가 너무 아래쪽이에요');
+      $('frame-guide').classList.add('show');
+      return;
+    }
+  }
+
+  // 모두 OK
+  hidePositionGuide();
+}
+
+async function setupCamera(){
+  const video = $('video');
+
+  // 1) 보안 컨텍스트 확인 (사파리는 file:// / http:// 거부)
+  const host = location.hostname;
+  const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '';
+  if (location.protocol !== 'https:' && !isLocalhost){
+    throw new Error('HTTPS 또는 localhost에서만 카메라 사용이 가능합니다. (file:// 또는 http:// 환경에서는 사파리가 카메라를 차단합니다)');
+  }
+
+  // 2) API 존재 확인
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    throw new Error('이 브라우저는 카메라 API를 지원하지 않습니다.');
+  }
+
+  setStatus('REQUESTING CAMERA');
+
+  // 3) 사파리 호환 제약 (deviceId 우선 시도, facingMode 폴백)
+  const constraints = {
+    video: {
+      facingMode: { ideal: 'user' },
+      width:  { ideal: 640 },
+      height: { ideal: 480 }
+    },
+    audio: false
+  };
+
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+  } catch (err){
+    // 사파리가 facingMode 객체 형태를 거부하면 단순 형태로 재시도
+    if (err.name === 'OverconstrainedError' || err.name === 'TypeError'){
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      } catch (err2){
+        throw friendlyCamError(err2);
+      }
+    } else {
+      throw friendlyCamError(err);
+    }
+  }
+
+  video.srcObject = stream;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('muted', '');
+  video.muted = true;
+
+  await new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('비디오 메타데이터 로드 시간 초과')), 8000);
+    video.onloadedmetadata = () => { clearTimeout(t); resolve(); };
+  });
+
+  // 사파리는 play() Promise를 꼭 처리해야 함
+  try {
+    await video.play();
+  } catch (e){
+    // 자동재생 차단된 경우 - 사용자 제스처 안에서 호출되었으므로 보통 통과되지만 방어
+    throw new Error('비디오 재생 실패. 사파리 설정에서 자동재생을 허용하거나 다시 시도해주세요.');
+  }
+  resizeCanvas();
+}
+
+function friendlyCamError(err){
+  const map = {
+    NotAllowedError:    '카메라 권한이 거부되었습니다. 사파리 > 설정 > 웹사이트 > 카메라에서 허용해주세요.',
+    PermissionDeniedError: '카메라 권한이 거부되었습니다.',
+    NotFoundError:      '카메라를 찾을 수 없습니다.',
+    DevicesNotFoundError: '카메라를 찾을 수 없습니다.',
+    NotReadableError:   '카메라가 다른 앱에서 사용 중입니다.',
+    TrackStartError:    '카메라가 다른 앱에서 사용 중입니다.',
+    OverconstrainedError: '카메라 설정 호환성 문제가 발생했습니다.',
+    SecurityError:      '보안 정책으로 카메라가 차단되었습니다. HTTPS 환경을 사용해주세요.'
+  };
+  const msg = map[err.name] || ('카메라 접근 실패: ' + (err.message || err.name || 'unknown'));
+  return new Error(msg);
+}
+
+async function setupPose(){
+  setStatus('LOADING AI MODEL');
+  pose = new Pose({
+    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`
+  });
+  pose.setOptions({
+    modelComplexity: 1,
+    smoothLandmarks: true,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+  });
+  pose.onResults(onResults);
+
+  // 모델 미리 초기화 (warm-up) - 사파리에서 첫 프레임 처리 안정화
+  try { await pose.initialize(); } catch(e){ /* 일부 빌드엔 없음, 무시 */ }
+
+  setStatus('READY');
+
+  // 자체 프레임 루프 - MediaPipe Camera 유틸 사용 안 함
+  // (사파리는 getUserMedia 이중 호출에 민감함)
+  requestAnimationFrame(frameTick);
+}
+
+async function frameTick(){
+  const video = $('video');
+  if (pose && !frameProcessing && video && video.readyState >= 2 && !video.paused){
+    frameProcessing = true;
+    try {
+      await pose.send({ image: video });
+    } catch (e){
+      // 단일 프레임 실패는 무시
+    } finally {
+      frameProcessing = false;
+    }
+  }
+  requestAnimationFrame(frameTick);
+}
+
+/* ---------- Main loop ---------- */
+
+function rafLoop(now){
+  tickGame(now);
+  requestAnimationFrame(rafLoop);
+}
+
+/* ---------- Buttons ---------- */
+
+$('start-btn').addEventListener('click', async () => {
+  $('err-msg').style.display = 'none';
+  showScreen('game');
+  try {
+    await setupCamera();
+    await setupPose();
+    requestAnimationFrame(rafLoop);
+    setTimeout(startRound, 600);
+  } catch (err){
+    showScreen('start');
+    const e = $('err-msg');
+    e.style.display = 'block';
+    e.textContent = err.message || '초기화 실패';
+  }
+});
+
+$('retry-btn').addEventListener('click', () => {
+  showScreen('game');
+  startRound();
+});
+
+window.addEventListener('resize', resizeCanvas);
+</script>
+
+
+</body></html>
