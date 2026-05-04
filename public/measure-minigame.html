@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { margin: 0; background: #222; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    #wrap { position: relative; display: inline-block; max-height: 90vh; }
+    img { display: block; max-height: 90vh; width: auto; }
+    #overlay { position: absolute; inset: 0; cursor: crosshair; }
+    .dot { position: absolute; width: 8px; height: 8px; background: red; border-radius: 50%; transform: translate(-50%,-50%); pointer-events: none; }
+    .box { position: absolute; border: 2px solid lime; pointer-events: none; box-sizing: border-box; }
+    .box-label { position: absolute; top: 2px; left: 4px; color: lime; font-size: 11px; font-family: monospace; }
+    #log { color: #0f0; font-family: monospace; font-size: 12px; margin-top: 12px; white-space: pre; max-width: 600px; }
+    #hint { color: #aaa; font-size: 12px; margin-bottom: 8px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="hint">각 버튼 좌상단 → 우하단 순으로 클릭 (총 4개: 머지/3매칭/리듬/닫기). 우클릭: 초기화</div>
+  <div id="wrap">
+    <img src="assets/ui/minigame_select.png">
+    <div id="overlay"></div>
+  </div>
+  <div id="log">클릭 로그:</div>
+  <script>
+    const overlay = document.getElementById('overlay')
+    const img     = overlay.previousElementSibling
+    const log     = document.getElementById('log')
+    let clicks = [], boxCount = 0
+    const labels = ['머지게임','3매칭게임','리듬게임','닫기버튼']
+
+    overlay.addEventListener('click', e => {
+      const r = img.getBoundingClientRect()
+      const sx = img.naturalWidth  / r.width
+      const sy = img.naturalHeight / r.height
+      const x = Math.round((e.clientX - r.left) * sx)
+      const y = Math.round((e.clientY - r.top)  * sy)
+      const dot = document.createElement('div')
+      dot.className = 'dot'
+      dot.style.left = (e.clientX - r.left) + 'px'
+      dot.style.top  = (e.clientY - r.top)  + 'px'
+      overlay.appendChild(dot)
+      clicks.push({x, y})
+      log.textContent = 'clicks:\n' + clicks.map((c,i)=>`  [${i}] x:${c.x} y:${c.y}`).join('\n')
+      if (clicks.length % 2 === 0) {
+        const a = clicks[clicks.length-2], b = clicks[clicks.length-1]
+        const l = Math.min(a.x,b.x), t = Math.min(a.y,b.y)
+        const w = Math.abs(b.x-a.x), h = Math.abs(b.y-a.y)
+        const box = document.createElement('div')
+        box.className = 'box'
+        box.style.left   = (l/img.naturalWidth*100)+'%'
+        box.style.top    = (t/img.naturalHeight*100)+'%'
+        box.style.width  = (w/img.naturalWidth*100)+'%'
+        box.style.height = (h/img.naturalHeight*100)+'%'
+        const lbl = document.createElement('div')
+        lbl.className = 'box-label'
+        lbl.textContent = labels[boxCount] || `box${boxCount}`
+        box.appendChild(lbl)
+        overlay.appendChild(box)
+        log.textContent += `\n[${labels[boxCount]||boxCount}] left%:${(l/img.naturalWidth*100).toFixed(2)} top%:${(t/img.naturalHeight*100).toFixed(2)} w%:${(w/img.naturalWidth*100).toFixed(2)} h%:${(h/img.naturalHeight*100).toFixed(2)}`
+        boxCount++
+      }
+    })
+    overlay.addEventListener('contextmenu', e => {
+      e.preventDefault(); clicks=[]; boxCount=0
+      overlay.querySelectorAll('.dot,.box').forEach(el=>el.remove())
+      log.textContent='초기화됨'
+    })
+  </script>
+</body>
+</html>

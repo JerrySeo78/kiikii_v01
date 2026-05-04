@@ -126,13 +126,37 @@ export class HomeScene extends Phaser.Scene {
       })
     })
 
-    document.getElementById('home-play-btn')?.addEventListener('click', () => {
+    // 오늘의 게임 플레이 + 하단 탭 플레이 → 팝업 표시
+    const showMiniSelect = () => {
+      document.getElementById('minigame-select-screen')!.classList.add('visible')
+    }
+    document.getElementById('home-play-btn')?.addEventListener('click', showMiniSelect)
+    document.querySelector<HTMLElement>('.tab-item[data-tab="play"]')?.addEventListener('click', showMiniSelect)
+
+    // 팝업 닫기
+    document.getElementById('mg-close')?.addEventListener('click', () => {
+      document.getElementById('minigame-select-screen')!.classList.remove('visible')
+    })
+
+    // 머지게임
+    document.getElementById('mg-merge')?.addEventListener('click', () => {
+      document.getElementById('minigame-select-screen')!.classList.remove('visible')
+    })
+
+    // 3매칭게임
+    document.getElementById('mg-match3')?.addEventListener('click', () => {
+      document.getElementById('minigame-select-screen')!.classList.remove('visible')
       const screen = document.getElementById('home-screen')!
-      this.cameras.main.fadeOut(250, 0, 0, 0)
+      this.cameras.main.fadeOut(300, 0, 0, 0)
       this.cameras.main.once('camerafadeoutcomplete', () => {
         screen.classList.remove('visible')
-        this.scene.start('MiniGameSelectScene')
+        this.scene.start('Match3Scene')
       })
+    })
+
+    // 리듬게임
+    document.getElementById('mg-rhythm')?.addEventListener('click', () => {
+      document.getElementById('minigame-select-screen')!.classList.remove('visible')
     })
   }
 
