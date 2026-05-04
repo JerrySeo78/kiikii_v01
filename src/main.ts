@@ -21,13 +21,11 @@ import { RhythmScene } from './scenes/RhythmScene'
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'game-container',
-  width: window.innerWidth,
-  height: window.innerHeight,
   backgroundColor: 'transparent',
   transparent: true,
   scene: [BootScene, VideoScene, SelectMemberScene, HomeScene, RoomScene, MiniGameSelectScene, Match3Scene, MergeScene, RhythmScene],
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
 }
