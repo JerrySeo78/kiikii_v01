@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 
 const MCOLS = 7
-const MROWS = 9
+const MROWS = 7
 const MERGE_CHAIN = ['flower', 'shell', 'star', 'diamond', 'heart', 'ticket', 'camera', 'tag']
 const TILE_FILES: Record<string, string> = {
   flower:  'assets/merge_tiles/tile_r0_c0.png',
@@ -60,7 +60,7 @@ export class MergeScene extends Phaser.Scene {
 
     // ── 레이아웃 계산 ──
     const topH    = 108
-    const middleH = 200
+    const middleH = Math.min(200, Math.floor(H * 0.27))
     const padX    = 8
     const padY    = 6
     const botPad  = 10
@@ -346,10 +346,10 @@ export class MergeScene extends Phaser.Scene {
   // ── 초기 아이템 배치 ──
   private seedInitialItems() {
     const seeds: [number, number, number][] = [
-      [7, 0, 0], [7, 2, 0], [7, 4, 0], [7, 6, 0],
-      [6, 1, 0], [6, 3, 0], [6, 5, 0],
-      [5, 0, 1], [5, 4, 1],
-      [4, 2, 2],
+      [5, 0, 0], [5, 2, 0], [5, 4, 0], [5, 6, 0],
+      [4, 1, 0], [4, 3, 0], [4, 5, 0],
+      [3, 0, 1], [3, 4, 1],
+      [2, 2, 2],
     ]
     for (const [r, c, lvl] of seeds) {
       this.placeItem(r, c, MERGE_CHAIN[lvl])
