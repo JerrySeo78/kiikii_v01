@@ -440,6 +440,25 @@
       border-radius: 20px 20px 0 0;
       display: flex;
       flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      touch-action: none;
+    }
+
+    /* 드래그 핸들 */
+    #room-panel-handle {
+      width: 100%;
+      padding: 10px 0 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: grab;
+      flex-shrink: 0;
+    }
+    #room-panel-handle::before {
+      content: '';
+      width: 36px; height: 4px;
+      background: rgba(200,140,170,0.4);
+      border-radius: 2px;
     }
 
     #room-tabs {
@@ -1416,6 +1435,7 @@
 
     <!-- 하단 패널 -->
     <div id="room-panel">
+      <div id="room-panel-handle"></div>
       <div id="room-tabs">
         <div class="room-tab active" data-tab="deco">🏠 꾸미기</div>
         <div class="room-tab" data-tab="outfit">👗 의상</div>

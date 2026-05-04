@@ -62,6 +62,7 @@ export class RoomScene extends Phaser.Scene {
     this.setupTabs()
     this.setupButtons(memberName)
     this.setupClickMove(screen, character)
+    this.setupPanelDrag()
     this.startIdleTimer()
   }
 
@@ -172,6 +173,64 @@ export class RoomScene extends Phaser.Scene {
       document.querySelectorAll<HTMLElement>(sel).forEach(el => {
         el.addEventListener('click', () => this.tapPop(el))
       })
+    })
+  }
+
+  private setupPanelDrag() {
+    const panel = document.getElementById('room-panel')!
+    const handle = document.getElementById('room-panel-handle')!
+
+    const panelH = panel.offsetHeight
+    // 스냅 위치: collapsed(기본), peek(조금 올림), expanded(많이 올림)
+    const SNAP = {
+      collapsed: 0,
+      peek:      Math.round(panelH * 0.35),
+      expanded:  Math.round(panelH * 0.62),
+    }
+    let currentSnap = 0  // translateY(-px)
+
+    const snapTo = (target: number, animate = true) => {
+      currentSnap = target
+      panel.style.transition = animate
+        ? 'transform 0.3s cubic-bezier(0.32,0.72,0,1)' : 'none'
+      panel.style.transform = `translateY(-${target}px)`
+    }
+
+    let startY = 0
+    let startSnap = 0
+
+    const onStart = (y: number) => {
+      startY = y
+      startSnap = currentSnap
+      panel.style.transition = 'none'
+    }
+
+    const onMove = (y: number) => {
+      const dy = startY - y   // 위로 드래그 = 양수
+      const next = Math.max(0, Math.min(SNAP.expanded, startSnap + dy))
+      panel.style.transform = `translateY(-${next}px)`
+    }
+
+    const onEnd = (y: number) => {
+      const dy = startY - y
+      const pos = startSnap + dy
+      const snaps = [SNAP.collapsed, SNAP.peek, SNAP.expanded]
+      const target = snaps.reduce((a, b) => Math.abs(b - pos) < Math.abs(a - pos) ? b : a)
+      snapTo(target)
+    }
+
+    // Touch
+    handle.addEventListener('touchstart', e => { onStart(e.touches[0].clientY) }, { passive: true })
+    handle.addEventListener('touchmove',  e => { onMove(e.touches[0].clientY) },  { passive: true })
+    handle.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientY) })
+
+    // Mouse (PC 테스트용)
+    handle.addEventListener('mousedown', e => {
+      onStart(e.clientY)
+      const move = (ev: MouseEvent) => onMove(ev.clientY)
+      const up   = (ev: MouseEvent) => { onEnd(ev.clientY); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }
+      window.addEventListener('mousemove', move)
+      window.addEventListener('mouseup', up)
     })
   }
 
