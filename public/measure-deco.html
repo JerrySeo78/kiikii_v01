@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { margin: 0; background: #222; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    #wrap { position: relative; display: inline-block; }
+    img { display: block; max-width: 100%; }
+    #overlay { position: absolute; inset: 0; cursor: crosshair; }
+    .dot { position: absolute; width: 6px; height: 6px; background: red; border-radius: 50%; transform: translate(-50%,-50%); pointer-events: none; }
+    .box { position: absolute; border: 2px solid lime; pointer-events: none; box-sizing: border-box; }
+    #log { color: #0f0; font-family: monospace; font-size: 13px; margin-top: 12px; white-space: pre; }
+    #hint { color: #aaa; font-size: 12px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div id="hint">클릭: 각 아이템 좌상단 → 우하단 순서로 클릭하면 박스 좌표가 계산됩니다. 우클릭: 초기화</div>
+  <div id="wrap">
+    <img src="assets/ui/room_deco_sheet.png">
+    <div id="overlay"></div>
+  </div>
+  <div id="log">클릭 로그:</div>
+
+  <script>
+    const overlay = document.getElementById('overlay')
+    const img     = overlay.previousElementSibling
+    const log     = document.getElementById('log')
+    const wrap    = document.getElementById('wrap')
+    let clicks = []
+
+    overlay.addEventListener('click', e => {
+      const r = img.getBoundingClientRect()
+      const scaleX = img.naturalWidth  / r.width
+      const scaleY = img.naturalHeight / r.height
+      const x = Math.round((e.clientX - r.left) * scaleX)
+      const y = Math.round((e.clientY - r.top)  * scaleY)
+
+      // dot
+      const dot = document.createElement('div')
+      dot.className = 'dot'
+      dot.style.left = (e.clientX - r.left) + 'px'
+      dot.style.top  = (e.clientY - r.top)  + 'px'
+      overlay.appendChild(dot)
+
+      clicks.push({x, y})
+      log.textContent = 'clicks:\n' + clicks.map((c,i) => `  [${i}] x:${c.x} y:${c.y}`).join('\n')
+
+      // 쌍이 되면 박스 그리기
+      if (clicks.length % 2 === 0) {
+        const a = clicks[clicks.length-2]
+        const b = clicks[clicks.length-1]
+        const box = document.createElement('div')
+        box.className = 'box'
+        box.style.left   = (Math.min(a.x,b.x)/img.naturalWidth*100)  + '%'
+        box.style.top    = (Math.min(a.y,b.y)/img.naturalHeight*100) + '%'
+        box.style.width  = (Math.abs(b.x-a.x)/img.naturalWidth*100)  + '%'
+        box.style.height = (Math.abs(b.y-a.y)/img.naturalHeight*100) + '%'
+        overlay.appendChild(box)
+
+        const idx = clicks.length/2 - 1
+        log.textContent += `\nbox[${idx}]: left%:${(Math.min(a.x,b.x)/img.naturalWidth*100).toFixed(2)} top%:${(Math.min(a.y,b.y)/img.naturalHeight*100).toFixed(2)} w%:${(Math.abs(b.x-a.x)/img.naturalWidth*100).toFixed(2)} h%:${(Math.abs(b.y-a.y)/img.naturalHeight*100).toFixed(2)}`
+      }
+    })
+
+    overlay.addEventListener('contextmenu', e => {
+      e.preventDefault()
+      clicks = []
+      overlay.querySelectorAll('.dot,.box').forEach(el => el.remove())
+      log.textContent = '초기화됨. 다시 클릭하세요.'
+    })
+  </script>
+</body>
+</html>

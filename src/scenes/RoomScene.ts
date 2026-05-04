@@ -188,21 +188,22 @@ export class RoomScene extends Phaser.Scene {
   private setupPanelDrag() {
     const panel  = document.getElementById('room-panel')!
     const handle = document.getElementById('room-panel-handle')!
-    const grid   = panel.querySelector<HTMLElement>('#room-items')!
 
-    // 패널 자연 높이 = 전체 펼친 상태 (탭 + 2행 + 버튼)
-    const fullH = panel.scrollHeight
+    const handleH = handle.offsetHeight
+    const tabsH   = panel.querySelector<HTMLElement>('#room-tabs')!.offsetHeight
+    const btnsH   = panel.querySelector<HTMLElement>('#room-bottom-btns')!.offsetHeight
 
-    // 1행만 보이는 높이: 핸들 + 탭 + 첫 행 아이템
-    const firstRow = grid.querySelector<HTMLElement>('.room-item')
-    const rowH = firstRow ? firstRow.offsetHeight + 8 : 130  // 8 = gap
-    const handle$ = handle.offsetHeight
-    const tabs$   = panel.querySelector<HTMLElement>('#room-tabs')!.offsetHeight
-    const oneRowH = handle$ + tabs$ + rowH + 12  // 12 = 여유
+    // 이미지 비율로 표시 높이 계산 (원본: 1091×619)
+    const imgW = panel.clientWidth
+    const imgH = Math.round(imgW / (1091 / 619))
+
+    // 접힘: 의상 섹션만 (~55%)
+    const oneRowH = handleH + tabsH + Math.round(imgH * 0.55)
+    // 펼침: 전체 이미지 + 버튼
+    const fullH   = handleH + tabsH + imgH + btnsH + 8
 
     const SNAPS = [oneRowH, fullH]
     let currentH = oneRowH
-
     panel.style.height = `${oneRowH}px`
 
     const snapTo = (h: number, animate = true) => {
@@ -214,35 +215,33 @@ export class RoomScene extends Phaser.Scene {
     let startY = 0
     let startH = 0
 
-    const onStart = (y: number) => {
-      startY = y
-      startH = currentH
-      panel.style.transition = 'none'
-    }
-
-    const onMove = (y: number) => {
-      const dy = startY - y  // 위로 드래그 = 양수 = 높이 증가
-      const next = Math.max(oneRowH, Math.min(fullH, startH + dy))
+    const onStart = (y: number) => { startY = y; startH = currentH; panel.style.transition = 'none' }
+    const onMove  = (y: number) => {
+      const next = Math.max(oneRowH, Math.min(fullH, startH + (startY - y)))
       panel.style.height = `${next}px`
     }
-
-    const onEnd = (y: number) => {
-      const dy = startY - y
-      const pos = startH + dy
-      const target = SNAPS.reduce((a, b) => Math.abs(b - pos) < Math.abs(a - pos) ? b : a)
-      snapTo(target)
+    const onEnd   = (y: number) => {
+      const pos = startH + (startY - y)
+      snapTo(SNAPS.reduce((a, b) => Math.abs(b - pos) < Math.abs(a - pos) ? b : a))
     }
 
     handle.addEventListener('touchstart', e => { onStart(e.touches[0].clientY) }, { passive: true })
     handle.addEventListener('touchmove',  e => { onMove(e.touches[0].clientY) },  { passive: true })
     handle.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientY) })
-
     handle.addEventListener('mousedown', e => {
       onStart(e.clientY)
       const move = (ev: MouseEvent) => onMove(ev.clientY)
       const up   = (ev: MouseEvent) => { onEnd(ev.clientY); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }
       window.addEventListener('mousemove', move)
       window.addEventListener('mouseup', up)
+    })
+
+    // 오버레이 아이템 클릭 선택
+    panel.querySelectorAll<HTMLElement>('.room-overlay-item').forEach(el => {
+      el.addEventListener('click', () => {
+        panel.querySelectorAll('.room-overlay-item').forEach(i => i.classList.remove('selected'))
+        el.classList.add('selected')
+      })
     })
   }
 

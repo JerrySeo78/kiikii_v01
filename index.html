@@ -487,27 +487,39 @@
       font-weight: 800;
     }
 
-    #room-items {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      padding: 12px;
+    /* 데코 시트 */
+    #room-deco-wrap {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
-    .room-item {
-      aspect-ratio: 1;
-      border-radius: 12px;
-      background-color: rgba(255,220,235,0.5);
-      border: 1.5px solid rgba(255,190,220,0.4);
-      background-size: contain;
-      background-position: center;
-      background-repeat: no-repeat;
+    #room-deco-sheet {
+      position: relative;
+      width: 100%;
     }
 
-    .room-item.selected {
-      border-color: #ff4495;
-      background: rgba(255,180,220,0.3);
-      box-shadow: 0 0 0 2px rgba(255,68,149,0.3);
+    #room-deco-sheet img {
+      width: 100%;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .room-overlay-item {
+      position: absolute;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, background 0.15s;
+    }
+
+    .room-overlay-item:active {
+      background: rgba(255,68,149,0.12);
+    }
+
+    .room-overlay-item.selected {
+      box-shadow: 0 0 0 3px #ff4495;
+      background: rgba(255,68,149,0.1);
     }
 
     #room-bottom-btns {
@@ -1448,15 +1460,22 @@
         <div class="room-tab" data-tab="gift">🎁 선물</div>
         <div class="room-tab" data-tab="talk">💬 대화</div>
       </div>
-      <div id="room-items">
-        <div class="room-item selected" style="background-image:url('assets/ui/room_items/outfit_01.png')"></div>
-        <div class="room-item" style="background-image:url('assets/ui/room_items/outfit_02.png')"></div>
-        <div class="room-item" style="background-image:url('assets/ui/room_items/outfit_03.png')"></div>
-        <div class="room-item" style="background-image:url('assets/ui/room_items/outfit_04.png')"></div>
-        <div class="room-item" style="background-image:url('assets/ui/room_items/furniture_01.png')"></div>
-        <div class="room-item" style="background-image:url('assets/ui/room_items/furniture_02.png')"></div>
-        <div class="room-item" style="background-image:url('assets/ui/room_items/furniture_03.png')"></div>
-        <div class="room-item" style="background-image:url('assets/ui/room_items/furniture_04.png')"></div>
+      <div id="room-deco-wrap">
+        <div id="room-deco-sheet">
+          <img src="assets/ui/room_deco_sheet.png" draggable="false" alt="">
+          <!-- 의상 -->
+          <div class="room-overlay-item selected" data-item="outfit_01" style="left:4.58%;top:15.99%;width:14.67%;height:32.31%"></div>
+          <div class="room-overlay-item" data-item="outfit_02" style="left:24.75%;top:15.67%;width:14.39%;height:32.31%"></div>
+          <div class="room-overlay-item" data-item="outfit_03" style="left:44.00%;top:17.61%;width:13.47%;height:30.37%"></div>
+          <div class="room-overlay-item" data-item="outfit_04" style="left:62.97%;top:17.13%;width:14.39%;height:30.85%"></div>
+          <div class="room-overlay-item" data-item="outfit_05" style="left:82.58%;top:16.32%;width:13.47%;height:31.18%"></div>
+          <!-- 가구 -->
+          <div class="room-overlay-item" data-item="furniture_01" style="left:5.77%;top:68.17%;width:14.39%;height:26.49%"></div>
+          <div class="room-overlay-item" data-item="furniture_02" style="left:25.02%;top:69.15%;width:13.47%;height:27.14%"></div>
+          <div class="room-overlay-item" data-item="furniture_03" style="left:42.25%;top:68.98%;width:13.47%;height:26.82%"></div>
+          <div class="room-overlay-item" data-item="furniture_04" style="left:60.59%;top:68.98%;width:17.41%;height:27.14%"></div>
+          <div class="room-overlay-item" data-item="furniture_05" style="left:81.76%;top:68.17%;width:14.85%;height:27.63%"></div>
+        </div>
       </div>
       <div id="room-bottom-btns">
         <button class="room-bottom-btn save">💾 저장</button>
