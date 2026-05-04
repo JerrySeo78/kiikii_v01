@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>KiiiKiii</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #1a0a14;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #app {
+      width: 100%; max-width: 390px; height: 100dvh;
+      margin: 0 auto;
+      position: relative; overflow: hidden;
+    }
+
+    #game-container {
+      position: absolute; inset: 0;
+    }
+    #game-container canvas {
+      display: block !important;
+      width: 100% !important; height: 100% !important;
+    }
+
+    /* ── 타이틀 화면 ── */
+    #boot-screen {
+      display: none;
+      position: absolute; inset: 0;
+      z-index: 10;
+    }
+    #boot-screen.visible { display: block; }
+
+    #boot-bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    #boot-btn-wrap {
+      position: absolute;
+      bottom: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 62%;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 50px;
+      overflow: hidden;
+      transition: transform 0.12s, filter 0.12s;
+      animation: btnFloat 2.4s ease-in-out infinite;
+    }
+    #boot-btn-wrap:active {
+      transform: translateX(-50%) scale(0.95);
+      filter: brightness(0.9);
+      animation: none;
+    }
+    #boot-btn-wrap img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    @keyframes btnFloat {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(-8px); }
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-CvCBfKql.js"></script>
+</head>
+<body>
+<div id="app">
+  <div id="game-container"></div>
+
+  <div id="boot-screen">
+    <img id="boot-bg" src="/assets/title_bg-CSSxjcz1.png" alt="">
+    <div id="boot-btn-wrap">
+      <img src="/assets/title_btn-QNJTQ3Gi.png" alt="시작하기">
+    </div>
+  </div>
+</div>
+</body>
+</html>
