@@ -59,11 +59,20 @@ export class RoomScene extends Phaser.Scene {
     bubble.style.left = `${this.charLeft}%`
     bubble.style.bottom = `${this.charBottom + 18}%`
 
+    this.preloadSprites()
     this.setupTabs()
     this.setupButtons(memberName)
     this.setupClickMove(screen, character)
     this.setupPanelDrag()
     this.startIdleTimer()
+  }
+
+  private preloadSprites() {
+    const dirs = ['walk_front_3f', 'back_walk_up_3f', 'walk_side_3f']
+    dirs.forEach(d => {
+      const img = new Image()
+      img.src = `assets/characters/sprites/${this.fileKey}/${this.fileKey}_${d}.png`
+    })
   }
 
   private setIdleSprite(el: HTMLDivElement) {

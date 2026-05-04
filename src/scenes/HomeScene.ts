@@ -78,14 +78,16 @@ export class HomeScene extends Phaser.Scene {
     })
   }
 
-  private setupRoomBtn(memberName: string) {
+  private setupRoomBtn(_memberName: string) {
     const btn = document.querySelector<HTMLElement>('.intimacy-room-btn')
     btn?.addEventListener('click', () => {
+      // 클릭 시점의 현재 선택 멤버를 DOM에서 읽음
+      const currentMember = document.getElementById('intimacy-member-name')?.textContent ?? '수이'
       const screen = document.getElementById('home-screen')!
       this.cameras.main.fadeOut(300, 0, 0, 0)
       this.time.delayedCall(300, () => {
         screen.classList.remove('visible')
-        this.scene.start('RoomScene', { member: memberName })
+        this.scene.start('RoomScene', { member: currentMember })
       })
     })
   }
