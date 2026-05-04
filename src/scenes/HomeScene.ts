@@ -125,6 +125,15 @@ export class HomeScene extends Phaser.Scene {
         el.addEventListener('click', () => this.tapPop(el))
       })
     })
+
+    document.getElementById('home-play-btn')?.addEventListener('click', () => {
+      const screen = document.getElementById('home-screen')!
+      this.cameras.main.fadeOut(250, 0, 0, 0)
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        screen.classList.remove('visible')
+        this.scene.start('MiniGameSelectScene')
+      })
+    })
   }
 
   private setupTabBar() {

@@ -4,6 +4,7 @@ import { VideoScene } from './scenes/VideoScene'
 import { SelectMemberScene } from './scenes/SelectMemberScene'
 import { HomeScene } from './scenes/HomeScene'
 import { RoomScene } from './scenes/RoomScene'
+import { MiniGameSelectScene } from './scenes/MiniGameSelectScene'
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -12,7 +13,7 @@ const config: Phaser.Types.Core.GameConfig = {
   height: window.innerHeight,
   backgroundColor: 'transparent',
   transparent: true,
-  scene: [BootScene, VideoScene, SelectMemberScene, HomeScene, RoomScene],
+  scene: [BootScene, VideoScene, SelectMemberScene, HomeScene, RoomScene, MiniGameSelectScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

@@ -551,6 +551,113 @@
       box-shadow: 0 3px 10px rgba(220,40,100,0.35);
     }
 
+    /* ── 미니게임 선택 ── */
+    #minigame-select-screen {
+      display: none;
+      position: absolute; inset: 0;
+      z-index: 50;
+      background: rgba(30,10,20,0.72);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+    }
+    #minigame-select-screen.visible { display: flex; }
+
+    #minigame-select-card {
+      width: 88%;
+      max-width: 340px;
+      background: #fff8f0;
+      border-radius: 28px;
+      border: 3px solid #ffb0d0;
+      padding: 24px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    #minigame-select-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .minigame-ctrl-icon { font-size: 40px; }
+    #minigame-select-header h2 {
+      font-size: 26px;
+      font-weight: 900;
+      color: #ff3d88;
+      text-shadow: 0 2px 0 rgba(255,100,160,0.25);
+      margin: 0;
+    }
+
+    .minigame-game-btn {
+      width: 100%;
+      border: none;
+      border-radius: 18px;
+      padding: 0;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .minigame-game-btn.merge  { background: linear-gradient(135deg, #ffb8d0 0%, #ff8ab0 100%); }
+    .minigame-game-btn.match3 { background: linear-gradient(135deg, #d8b8f8 0%, #b890f0 100%); }
+    .minigame-game-btn.rhythm { background: linear-gradient(135deg, #b8d8f8 0%, #90b8f0 100%); }
+
+    .minigame-game-icon {
+      font-size: 36px;
+      margin-left: 16px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .minigame-game-name {
+      flex: 1;
+      font-size: 24px;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .minigame-game-btn.merge  .minigame-game-name { color: #c0005a; }
+    .minigame-game-btn.match3 .minigame-game-name { color: #5500aa; }
+    .minigame-game-btn.rhythm .minigame-game-name { color: #0055aa; }
+
+    .minigame-game-arrow {
+      font-size: 22px;
+      font-weight: 900;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .minigame-game-btn.merge  .minigame-game-arrow { color: #c0005a; }
+    .minigame-game-btn.match3 .minigame-game-arrow { color: #5500aa; }
+    .minigame-game-btn.rhythm .minigame-game-arrow { color: #0055aa; }
+
+    .minigame-char {
+      position: absolute;
+      right: 44px; bottom: 0;
+      width: 80px; height: 88px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center bottom;
+      pointer-events: none;
+    }
+
+    #minigame-close-btn {
+      width: 80%;
+      height: 48px;
+      border-radius: 24px;
+      border: none;
+      background: linear-gradient(90deg, #ff6fb0, #ff3388);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      letter-spacing: 2px;
+    }
+
     /* ── 홈 화면 ── */
     #home-screen {
       display: none;
@@ -1251,6 +1358,39 @@
         <span class="label">멤버 선택</span>
         <span class="sparkle">✦</span>
       </div>
+    </div>
+  </div>
+
+  <!-- 미니게임 선택 팝업 -->
+  <div id="minigame-select-screen">
+    <div id="minigame-select-card">
+      <div id="minigame-select-header">
+        <div class="minigame-ctrl-icon">🎮</div>
+        <h2>미니 게임 선택</h2>
+      </div>
+
+      <button class="minigame-game-btn merge" id="minigame-btn-merge">
+        <span class="minigame-game-icon">🟪🟨<br>🟨🟩</span>
+        <span class="minigame-game-name">머지<br>게임</span>
+        <div class="minigame-char" style="background-image:url('assets/characters/originals/sui.png')"></div>
+        <span class="minigame-game-arrow">›</span>
+      </button>
+
+      <button class="minigame-game-btn match3" id="minigame-btn-match3">
+        <span class="minigame-game-icon">💎💛<br>🔷✨</span>
+        <span class="minigame-game-name">3매칭<br>게임</span>
+        <div class="minigame-char" style="background-image:url('assets/characters/originals/haum.png')"></div>
+        <span class="minigame-game-arrow">›</span>
+      </button>
+
+      <button class="minigame-game-btn rhythm" id="minigame-btn-rhythm">
+        <span class="minigame-game-icon">🎵🎶<br>🎵✨</span>
+        <span class="minigame-game-name">리듬<br>게임</span>
+        <div class="minigame-char" style="background-image:url('assets/characters/originals/kya.png')"></div>
+        <span class="minigame-game-arrow">›</span>
+      </button>
+
+      <button id="minigame-close-btn">♥ 닫기 ♥</button>
     </div>
   </div>
 
