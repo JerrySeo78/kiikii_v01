@@ -4,16 +4,16 @@ const COLS = 7
 const ROWS = 7
 
 // 스테이지별 활성 타일 수: 1~5→5종, 6~10→6종, 11~20→7종, 21~30→8종
-const ALL_TILE_KEYS = ['flower', 'shell', 'star', 'diamond', 'heart', 'ticket', 'camera', 'tag']
+const ALL_TILE_KEYS = ['m3_flower', 'm3_shell', 'm3_star', 'm3_diamond', 'm3_heart', 'm3_ticket', 'm3_camera', 'm3_tag']
 const TILE_FILES: Record<string, string> = {
-  flower:  'assets/titles/tile_r0_c0.png',
-  shell:   'assets/titles/tile_r0_c1.png',
-  star:    'assets/titles/tile_r0_c2.png',
-  diamond: 'assets/titles/tile_r0_c3.png',
-  heart:   'assets/titles/tile_r0_c4.png',
-  ticket:  'assets/titles/tile_r2_c5.png',
-  camera:  'assets/titles/tile_r2_c6.png',
-  tag:     'assets/titles/tile_r0_c5.png',
+  m3_flower:  'assets/titles/tile_r0_c0.png',
+  m3_shell:   'assets/titles/tile_r0_c1.png',
+  m3_star:    'assets/titles/tile_r0_c2.png',
+  m3_diamond: 'assets/titles/tile_r0_c3.png',
+  m3_heart:   'assets/titles/tile_r0_c4.png',
+  m3_ticket:  'assets/titles/tile_r2_c5.png',
+  m3_camera:  'assets/titles/tile_r2_c6.png',
+  m3_tag:     'assets/titles/tile_r0_c5.png',
 }
 
 function getActiveKeys(stage: number): string[] {
@@ -246,8 +246,8 @@ export class Match3Scene extends Phaser.Scene {
     this.score = 0
     this.comboCount = 0
     this.missions = [
-      { key: 'camera', label: '카메라', target: stage.camera },
-      { key: 'ticket', label: '티켓',   target: stage.ticket },
+      { key: 'm3_camera', label: '카메라', target: stage.camera },
+      { key: 'm3_ticket', label: '티켓',   target: stage.ticket },
     ]
     this.missionProgress = [0, 0]
   }
