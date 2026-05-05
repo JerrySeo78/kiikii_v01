@@ -799,6 +799,7 @@ export class Match3Scene extends Phaser.Scene {
 
   private advanceStage() {
     this.busy = true
+    this.sys.game.canvas.style.zIndex = '30'
     const W = this.scale.width, H = this.scale.height
     const isFinal = CURRENT_STAGE >= 30
 
@@ -848,6 +849,7 @@ export class Match3Scene extends Phaser.Scene {
 
     const all = [title, clearTxt, btnBg, btnTxt, hitZone]
     hitZone.on('pointerup', () => {
+      this.sys.game.canvas.style.zIndex = '11'
       if (isFinal) { this.goBack(); return }
       CURRENT_STAGE++
       all.forEach(o => o.destroy())
