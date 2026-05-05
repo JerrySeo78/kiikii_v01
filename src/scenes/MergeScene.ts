@@ -55,7 +55,7 @@ export class MergeScene extends Phaser.Scene {
     this.sys.game.canvas.style.zIndex = '11'
     document.getElementById('merge-screen')!.classList.add('visible')
     this.cameras.main.fadeIn(300, 0, 0, 0)
-    document.getElementById('merge-close-btn')?.addEventListener('click', () => { SoundFX.tick(); this.goBack() })
+    document.getElementById('merge-close-btn')?.addEventListener('click', () => this.goBack())
 
     this.add.image(W / 2, H / 2, 'merge-bg').setDisplaySize(W, H).setDepth(0)
 

@@ -85,7 +85,7 @@ export class Match3Scene extends Phaser.Scene {
 
     document.getElementById('match3-screen')!.classList.add('visible')
     this.cameras.main.fadeIn(300, 0, 0, 0)
-    document.getElementById('match3-close-btn')?.addEventListener('click', () => { SoundFX.tick(); this.goBack() })
+    document.getElementById('match3-close-btn')?.addEventListener('click', () => this.goBack())
 
     this.initStageData()
     this.syncMissionUI()
@@ -849,6 +849,7 @@ export class Match3Scene extends Phaser.Scene {
 
     const all = [title, clearTxt, btnBg, btnTxt, hitZone]
     hitZone.on('pointerup', () => {
+      SoundFX.tick()
       this.sys.game.canvas.style.zIndex = '11'
       if (isFinal) { this.goBack(); return }
       CURRENT_STAGE++
@@ -906,13 +907,13 @@ export class Match3Scene extends Phaser.Scene {
       fontSize: '14px', color: '#fff',
       backgroundColor: '#ff4495', padding: { x: 14, y: 8 }
     }).setOrigin(0.5).setDepth(62).setInteractive({ useHandCursor: true })
-    retry.on('pointerup', () => this.scene.restart())
+    retry.on('pointerup', () => { SoundFX.tick(); this.scene.restart() })
 
     const home = this.add.text(W / 2 + 60, H / 2 + 40, '홈으로', {
       fontSize: '14px', color: '#fff',
       backgroundColor: '#6644aa', padding: { x: 14, y: 8 }
     }).setOrigin(0.5).setDepth(62).setInteractive({ useHandCursor: true })
-    home.on('pointerup', () => this.goBack())
+    home.on('pointerup', () => { SoundFX.tick(); this.goBack() })
   }
 
   private goBack() {

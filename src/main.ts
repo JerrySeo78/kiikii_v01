@@ -8,6 +8,7 @@ import './styles/match3.css'
 import './styles/merge.css'
 import './styles/rhythm.css'
 import Phaser from 'phaser'
+import { SoundFX } from './utils/SoundFX'
 import { BootScene } from './scenes/BootScene'
 import { VideoScene } from './scenes/VideoScene'
 import { SelectMemberScene } from './scenes/SelectMemberScene'
@@ -31,3 +32,11 @@ const config: Phaser.Types.Core.GameConfig = {
 }
 
 new Phaser.Game(config)
+
+// 전역 버튼 터치 효과음: cursor:pointer인 HTML 요소를 탭할 때 tick
+document.addEventListener('pointerdown', (e) => {
+  const el = e.target as HTMLElement
+  if (window.getComputedStyle(el).cursor === 'pointer' || el.tagName === 'BUTTON') {
+    SoundFX.tick()
+  }
+}, { passive: true })
