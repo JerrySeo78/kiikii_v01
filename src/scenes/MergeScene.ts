@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { SoundFX } from '../utils/SoundFX'
 
 const MCOLS = 7
 const MROWS = 7
@@ -54,7 +55,7 @@ export class MergeScene extends Phaser.Scene {
     this.sys.game.canvas.style.zIndex = '11'
     document.getElementById('merge-screen')!.classList.add('visible')
     this.cameras.main.fadeIn(300, 0, 0, 0)
-    document.getElementById('merge-close-btn')?.addEventListener('click', () => this.goBack())
+    document.getElementById('merge-close-btn')?.addEventListener('click', () => { SoundFX.tick(); this.goBack() })
 
     this.add.image(W / 2, H / 2, 'merge-bg').setDisplaySize(W, H).setDepth(0)
 
@@ -159,6 +160,7 @@ export class MergeScene extends Phaser.Scene {
     })
 
     this.jarSprite.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
+      SoundFX.jarTap()
       this.jarDragging    = true
       this.jarDragStartX  = ptr.x
       this.jarDragStartY  = ptr.y
@@ -196,6 +198,7 @@ export class MergeScene extends Phaser.Scene {
         if (!this.grid[r][c].key) empty.push(this.grid[r][c])
     if (empty.length === 0) return
 
+    SoundFX.spawnItem()
     const cell = empty[Math.floor(Math.random() * empty.length)]
     this.placeItem(cell.row, cell.col, MERGE_CHAIN[0], true)
   }
@@ -319,6 +322,7 @@ export class MergeScene extends Phaser.Scene {
     dst.sprite?.destroy(); dst.sprite = null; dst.key = null
 
     this.placeItem(dst.row, dst.col, nextKey, true)
+    SoundFX.mergeChime(idx)
     this.cameras.main.shake(80, 0.004)
 
     const cx = this.gridX + dst.col * this.cellSize + this.cellSize / 2

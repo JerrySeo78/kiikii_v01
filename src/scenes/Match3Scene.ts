@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { SoundFX } from '../utils/SoundFX'
 
 const COLS = 7
 const ROWS = 7
@@ -84,7 +85,7 @@ export class Match3Scene extends Phaser.Scene {
 
     document.getElementById('match3-screen')!.classList.add('visible')
     this.cameras.main.fadeIn(300, 0, 0, 0)
-    document.getElementById('match3-close-btn')?.addEventListener('click', () => this.goBack())
+    document.getElementById('match3-close-btn')?.addEventListener('click', () => { SoundFX.tick(); this.goBack() })
 
     this.initStageData()
     this.syncMissionUI()
@@ -417,6 +418,8 @@ export class Match3Scene extends Phaser.Scene {
     const boardW = this.tileSize * COLS
     const boardH = this.tileSize * ROWS
 
+    if (rowClears.length > 0 || colClears.length > 0) SoundFX.lineClear()
+    if (explosions.length > 0) SoundFX.boom()
     for (const row of rowClears) {
       const y = this.boardY + row * this.tileSize + this.tileSize / 2
       const g = this.add.graphics().setDepth(56)
@@ -587,6 +590,7 @@ export class Match3Scene extends Phaser.Scene {
     const ax = a.sprite.x, ay = a.sprite.y
     const bx = b.sprite.x, by = b.sprite.y
 
+    SoundFX.swap()
     this.tweens.add({ targets: a.sprite, x: bx, y: by, duration: 150, ease: 'Quad.Out' })
     this.tweens.add({
       targets: b.sprite, x: ax, y: ay, duration: 150, ease: 'Quad.Out',
@@ -714,6 +718,7 @@ export class Match3Scene extends Phaser.Scene {
     this.syncMissionUI()
 
     if (animate) {
+      SoundFX.pop(multiplier)
       toRemove.forEach(tile => this.spawnGlowEffect(tile.sprite.x, tile.sprite.y, multiplier))
       const floatText = this.add.text(cx, cy, `+${gained}`, {
         fontSize: '16px', fontStyle: 'bold', color: '#ffffff',
@@ -832,6 +837,7 @@ export class Match3Scene extends Phaser.Scene {
       .setDepth(63).setInteractive({ useHandCursor: true })
 
     // 등장 애니메이션
+    SoundFX.stageClear()
     this.cameras.main.shake(250, 0.01)
     this.tweens.add({ targets: title,    scaleX: 1, scaleY: 1, duration: 420, ease: 'Back.Out' })
     this.tweens.add({ targets: clearTxt, scaleX: 1, scaleY: 1, duration: 420, delay: 150, ease: 'Back.Out' })
@@ -874,6 +880,7 @@ export class Match3Scene extends Phaser.Scene {
   }
 
   private onGameOver() {
+    SoundFX.gameOver()
     this.showResult(false)
   }
 
